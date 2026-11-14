@@ -32,17 +32,28 @@ export function clock(seconds: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+/** What every visitor's runs of a puzzle add up to. */
+export interface Tally {
+  antRuns: number
+  antMedian: number | null
+  antBest: number | null
+  handRuns: number
+  handBest: number | null
+}
+
 /** A puzzle, running: the arena on the left, its instruments on the right. */
 export function Lab({
   puzzle,
   title,
   seed,
+  tally,
   onFinish,
   children,
 }: {
   puzzle: Puzzle
   title: string
   seed?: number
+  tally?: Tally
   onFinish?: (finish: Finish) => void
   children?: React.ReactNode
 }) {
@@ -64,7 +75,7 @@ export function Lab({
         />
         {session && <Overlay session={session} snap={snap} />}
       </div>
-      <Panel session={session} snap={snap} title={title}>
+      <Panel session={session} snap={snap} title={title} tally={tally}>
         {children}
       </Panel>
     </section>
@@ -173,11 +184,13 @@ function Panel({
   session,
   snap,
   title,
+  tally,
   children,
 }: {
   session: Session | null
   snap: Snapshot
   title: string
+  tally?: Tally
   children?: React.ReactNode
 }) {
   const live = session !== null
@@ -274,6 +287,15 @@ function Panel({
           <Switch checked={snap.scentRule} onCheckedChange={on => session?.setRule('scent', on)} />
         </label>
       </div>
+
+      {tally && tally.antRuns + tally.handRuns > 0 && (
+        <dl className="border-y">
+          <Row label="Colonies delivered" value={tally.antRuns.toLocaleString('en-US')} />
+          {tally.antMedian !== null && <Row label="Typical colony" value={clock(tally.antMedian)} />}
+          {tally.antBest !== null && <Row label="Fastest colony" value={clock(tally.antBest)} />}
+          {tally.handBest !== null && <Row label="Fastest by hand" value={clock(tally.handBest)} />}
+        </dl>
+      )}
 
       <div className="mt-auto flex gap-2">
         <Button

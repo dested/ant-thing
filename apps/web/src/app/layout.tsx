@@ -8,11 +8,19 @@ export function Layout() {
           Ant Movers
         </Link>
         <nav className="flex items-center gap-5 text-sm font-medium">
-          <NavLink
-            to="/puzzles"
-            className={({ isActive }) => (isActive ? 'underline underline-offset-4' : 'hover:underline hover:underline-offset-4')}>
-            Puzzles
-          </NavLink>
+          {[
+            { to: '/puzzles', label: 'Puzzles' },
+            { to: '/build', label: 'Build' },
+          ].map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                isActive ? 'underline underline-offset-4' : 'hover:underline hover:underline-offset-4'
+              }>
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
       </header>
       <main>

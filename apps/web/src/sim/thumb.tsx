@@ -13,8 +13,7 @@ export function PuzzleThumb({ puzzle, className }: { puzzle: Puzzle; className?:
           points={segmentPoly(x1, y1, x2, y2, WALL_T)
             .pts.map(p => `${p.x},${p.y}`)
             .join(' ')}
-          className="fill-wall stroke-foreground/40"
-          strokeWidth={2}
+          className="fill-foreground/75"
         />
       ))}
       <circle

@@ -1,5 +1,19 @@
 import { colors } from '@app/tokens'
-import { ANT_LEN, CARRY, LIFTER, NEST, NEST_R, PULLER, UNKNOWN, type Puzzle, type World } from '@app/sim'
+import {
+  ANT_LEN,
+  CARRY,
+  LIFTER,
+  NEST,
+  NEST_R,
+  PULLER,
+  segmentPoly,
+  UNKNOWN,
+  WALL_T,
+  type Poly,
+  type Puzzle,
+  type Shape,
+  type World,
+} from '@app/sim'
 
 export interface Camera {
   /** World point at the centre of the view. */
@@ -75,12 +89,36 @@ export class Renderer {
     if (view.trace) this.trace(ctx, world, z)
     this.nest(ctx, p, z)
     this.sealedOff(ctx, world)
-    this.walls(ctx, p, world)
-    this.load(ctx, world)
+    this.walls(ctx, p, world.walls.slice(0, p.walls.length))
+    this.load(ctx, world.shape, world.x, world.y, world.a)
     if (view.pulls) this.grips(ctx, world)
     this.ants(ctx, world, z, view.roles, playerIndex)
     if (view.pulls) this.pulls(ctx, world, z)
     if (view.forces) this.forces(ctx, world, z)
+  }
+
+  /** A puzzle with nobody in it: what the editor draws under its handles. */
+  still(
+    ctx: CanvasRenderingContext2D,
+    puzzle: Puzzle,
+    shape: Shape,
+    cam: Camera,
+    width: number,
+    height: number,
+    dpr: number
+  ): void {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, width, height)
+    const z = cam.zoom
+    ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (width / 2 - cam.x * z), dpr * (height / 2 - cam.y * z))
+    this.floor(ctx, puzzle)
+    this.nest(ctx, puzzle, z)
+    this.walls(
+      ctx,
+      puzzle,
+      puzzle.walls.map(([x1, y1, x2, y2]) => segmentPoly(x1, y1, x2, y2, WALL_T))
+    )
+    this.load(ctx, shape, puzzle.load.x, puzzle.load.y, puzzle.load.a)
   }
 
   /**
@@ -418,14 +456,11 @@ export class Renderer {
     ctx.restore()
   }
 
-  private walls(ctx: CanvasRenderingContext2D, p: Puzzle, world: World): void {
-    const count = p.walls.length
-    if (count > 0) {
+  private walls(ctx: CanvasRenderingContext2D, p: Puzzle, polys: readonly Poly[]): void {
+    if (polys.length > 0) {
       const path = (): void => {
         ctx.beginPath()
-        for (let i = 0; i < count; i++) {
-          const poly = world.walls[i]
-          if (!poly) continue
+        for (const poly of polys) {
           poly.pts.forEach((v, k) => (k === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y)))
           ctx.closePath()
         }
@@ -450,24 +485,24 @@ export class Renderer {
     ctx.strokeRect(0, 0, p.w, p.h)
   }
 
-  private load(ctx: CanvasRenderingContext2D, world: World): void {
-    const rects = world.shape.rects
+  private load(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: number, a: number): void {
+    const rects = shape.rects
     // The pieces overlap, so anything translucent is filled as one path: the union, painted once.
     const union = (inset: number): void => {
       ctx.beginPath()
       for (const r of rects) ctx.rect(r.x0 + inset, r.y0 + inset, r.x1 - r.x0 - inset * 2, r.y1 - r.y0 - inset * 2)
     }
     ctx.save()
-    ctx.translate(world.x + 2.5, world.y + 3.5)
-    ctx.rotate(world.a)
+    ctx.translate(x + 2.5, y + 3.5)
+    ctx.rotate(a)
     ctx.fillStyle = 'rgba(0,0,0,0.2)'
     union(0)
     ctx.fill()
     ctx.restore()
 
     ctx.save()
-    ctx.translate(world.x, world.y)
-    ctx.rotate(world.a)
+    ctx.translate(x, y)
+    ctx.rotate(a)
     // Stroke every piece, then fill every piece: the fills hide the inner strokes, leaving one outline.
     ctx.strokeStyle = 'rgba(70,8,10,0.9)'
     ctx.lineWidth = 2.2
