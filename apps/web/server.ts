@@ -23,6 +23,8 @@ async function createServer() {
   // so dev needs one port and two clones of this template can run side by side.
   const httpServer = http.createServer(app)
   app.disable('x-powered-by')
+  // One proxy (Drydock's Caddy) sits in front in production: req.ip is the visitor, not the proxy.
+  app.set('trust proxy', 1)
 
   // One tidy log line per request (status + timing), asset noise filtered out.
   app.use(requestLogger(isProd))

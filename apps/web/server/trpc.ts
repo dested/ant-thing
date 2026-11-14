@@ -2,13 +2,17 @@ import { initTRPC } from '@trpc/server'
 import type { CreateExpressContextOptions } from '@trpc/server/adapters/express'
 import type { IncomingHttpHeaders } from 'node:http'
 import superjson from 'superjson'
+import { whoIs } from './who'
 
-// No accounts in this project (init --no-auth): procedures get an empty context.
-export type Context = Record<string, never>
+// No accounts in this project (init --no-auth). A caller is known only by `who`: a salted hash of
+// the IP, used for rate limits and so one visitor reports a puzzle once.
+export interface Context {
+  who: string
+}
 
 /** The context for every caller (HTTP here, the SSR proxy in entry-server). */
-export function contextFor(): Context {
-  return {}
+export function contextFor(ip: string): Context {
+  return { who: whoIs(ip) }
 }
 
 /** Node's header object as a Fetch `Headers`. */
@@ -25,13 +29,9 @@ export function toHeaders(raw: IncomingHttpHeaders): Headers {
   return headers
 }
 
-/** The context for a request's headers: any adapter (Express here, a WebSocket upgrade) ends up here. */
-export async function contextFromHeaders(_headers: Headers): Promise<Context> {
-  return contextFor()
-}
-
-export function createContext({ req }: CreateExpressContextOptions): Promise<Context> {
-  return contextFromHeaders(toHeaders(req.headers))
+/** The context for a request: any adapter (Express here, a WebSocket upgrade) ends up here. */
+export function createContext({ req }: CreateExpressContextOptions): Context {
+  return contextFor(req.ip ?? '')
 }
 
 // superjson on the wire: procedures return real Dates/Maps/BigInts and the

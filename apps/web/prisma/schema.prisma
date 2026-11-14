@@ -9,3 +9,60 @@ datasource db {
   provider = "postgresql"
 }
 
+
+/// A puzzle: the built-in ones (preset) and every one published from the editor.
+model Puzzle {
+  id        String   @id
+  title     String
+  /// Arena, walls, load, nest and colony size: packages/sim `puzzleSchema`.
+  data      Json
+  /// sha256 of `data`, so the same puzzle is published once.
+  hash      String   @unique
+  preset    Boolean  @default(false)
+  hidden    Boolean  @default(false)
+  reports   Int      @default(0)
+  /// Finished runs, counted on the row so a list never aggregates.
+  antRuns   Int      @default(0) @map("ant_runs")
+  antBest   Float?   @map("ant_best")
+  handRuns  Int      @default(0) @map("hand_runs")
+  handBest  Float?   @map("hand_best")
+  ipHash    String?  @map("ip_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+  runs      Run[]
+  flags     Report[]
+
+  @@index([hidden, preset, createdAt])
+  @@index([hidden, preset, antRuns])
+  @@map("puzzle")
+}
+
+enum RunKind {
+  ANTS
+  HANDS
+}
+
+/// One delivery: a colony left to the published rules (ANTS) or a person dragging the load (HANDS).
+model Run {
+  id        Int      @id @default(autoincrement())
+  puzzleId  String   @map("puzzle_id")
+  puzzle    Puzzle   @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+  kind      RunKind
+  /// Sim seconds from the first bite to the nest.
+  seconds   Float
+  seed      Int
+  ipHash    String   @map("ip_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([puzzleId, kind, seconds])
+  @@map("run")
+}
+
+model Report {
+  puzzleId  String   @map("puzzle_id")
+  puzzle    Puzzle   @relation(fields: [puzzleId], references: [id], onDelete: Cascade)
+  ipHash    String   @map("ip_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([puzzleId, ipHash])
+  @@map("report")
+}

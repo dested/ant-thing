@@ -28,7 +28,10 @@ export const emailList = z
 // where it's used; that throws a MissingEnvError naming it. `add:*` recipes
 // add theirs here.
 const optionalKeys = {
-  // EXAMPLE_API_KEY: optionalSecret,
+  // The token /admin asks for. Unset: the admin procedures refuse everyone.
+  ADMIN_TOKEN: optionalSecret,
+  // Set to anything to stop new puzzles being published (a kill switch for a bad day).
+  PUBLISH_OFF: optionalSecret,
 }
 
 const schema = z.object({

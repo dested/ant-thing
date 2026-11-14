@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { buildShape, CARRY, DT, findRoute, isConnected, NEST, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
+import { buildShape, CARRY, checkPuzzle, DT, findRoute, isConnected, NEST, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
 
 const piano = preset('piano-movers')?.puzzle
 const open = preset('open-field')?.puzzle
@@ -24,6 +24,13 @@ describe('puzzles', () => {
       expect(findRoute(p.puzzle).solvable).toBe(true)
     }
   }, 60_000)
+
+  test('every preset passes the cheap checks, and the checks catch a load in a wall', () => {
+    for (const p of PRESETS) expect(checkPuzzle(p.puzzle)).toBeNull()
+    expect(checkPuzzle({ ...piano, load: { ...piano.load, x: 490, y: 100 } })).toContain('inside a wall')
+    expect(checkPuzzle({ ...open, load: { ...open.load, cells: [[0, 0], [5, 5]] } })).toContain('more than one piece')
+    expect(checkPuzzle({ ...open, nest: { x: 2000, y: 10 } })).toContain('nest')
+  })
 
   test('a sealed arena is reported unsolvable', () => {
     const sealed: Puzzle = { ...open, walls: [[520, 0, 520, 700]] }
