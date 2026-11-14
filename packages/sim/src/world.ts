@@ -123,6 +123,9 @@ export class World {
   deepest = 0
   /** While true the load can't move and nobody may bite (used to let trails form first). */
   frozen = false
+  /** Steps of warm-up left. */
+  warmup = 0
+  hands = false
   private grabOpen = true
 
   /** The ant you control: where the pointer is, and whether you're holding the bite key. */
@@ -177,20 +180,38 @@ export class World {
     this.place()
   }
 
-  /** Let the colony find the load and lay trails before the clock starts. */
+  /** Let the colony find the load and lay trails before the clock starts (all at once). */
   prewarm(seconds: number): void {
+    this.startWarmup(seconds)
+    while (this.warmup > 0) this.step()
+  }
+
+  /** Begin a warm-up that plays out over the next `seconds` of steps: the load is frozen until it ends. */
+  startWarmup(seconds: number): void {
     this.frozen = true
     this.grabOpen = false
-    const total = Math.round(seconds / DT)
-    const open = total - Math.round(3 / DT)
-    for (let i = 0; i < total; i++) {
-      if (i === open) this.grabOpen = true
-      this.step()
+    this.warmup = Math.max(1, Math.round(seconds / DT))
+  }
+
+  /** Hands mode: nobody may bite, so the load only moves when it is dragged. */
+  setHands(on: boolean): void {
+    this.hands = on
+    this.grabOpen = !on && this.warmup <= Math.round(3 / DT)
+    if (!on) return
+    for (const ant of this.ants) if (ant.state === CARRY) this.letGo(ant, true)
+  }
+
+  /** The body-frame point under a world point, or null when it misses the load. */
+  gripAt(x: number, y: number): { bx: number; by: number } | null {
+    for (const piece of this.pieces) {
+      if (distToPoly(piece, x, y) > 0) continue
+      const c = Math.cos(this.a)
+      const s = Math.sin(this.a)
+      const dx = x - this.x
+      const dy = y - this.y
+      return { bx: c * dx + s * dy, by: -s * dx + c * dy }
     }
-    this.frozen = false
-    this.grabOpen = true
-    this.time = 0
-    this.trace.length = 0
+    return null
   }
 
   /** Take over one ant. Returns false when there is no free ant to take. */
@@ -229,6 +250,16 @@ export class World {
 
   step(): void {
     this.tick++
+    if (this.warmup > 0) {
+      this.warmup--
+      if (this.warmup === Math.round(3 / DT)) this.grabOpen = !this.hands
+      if (this.warmup === 0) {
+        this.frozen = false
+        this.grabOpen = !this.hands
+        this.time = 0
+        this.trace.length = 0
+      }
+    }
     if (this.tick % 6 === 0) this.fields.age(6 * DT, this.params.homeAging, this.params.foodAging)
     this.solve()
     this.place()

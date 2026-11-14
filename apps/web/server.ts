@@ -143,7 +143,7 @@ async function createServer() {
       port: PORT,
       isProd,
       databaseUrl: env.DATABASE_URL,
-      routes: ['/', '/dashboard', '/healthz', '/api/trpc'],
+      routes: ['/', '/healthz', '/api/trpc'],
     })
   })
 }

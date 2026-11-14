@@ -30,8 +30,10 @@
     "test:e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@app/sim": "workspace:*",
     "@app/tokens": "workspace:*",
     "@base-ui/react": "catalog:",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
     "@tanstack/react-query": "catalog:",

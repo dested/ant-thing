@@ -31,6 +31,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-load: var(--load);
+  --color-marker: var(--marker);
+  --color-lifter: var(--lifter);
+  --color-wall: var(--wall);
+  --color-ant: var(--ant);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

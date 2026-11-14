@@ -1,3 +1,4 @@
+@import '@fontsource-variable/bricolage-grotesque/wdth.css';
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '@app/tokens/theme.css';
@@ -17,5 +18,19 @@
   }
   body {
     @apply bg-background font-sans text-foreground;
+    font-variation-settings: 'wdth' 100;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Headings: the same family, condensed and heavy, like a specimen label. */
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-variation-settings: 'wdth' 78;
+    letter-spacing: -0.01em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }

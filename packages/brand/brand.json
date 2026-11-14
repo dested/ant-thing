@@ -1,4 +1,4 @@
 {
-  "icon": { "background": "primary", "mark": "primary-foreground", "markSize": 0.54 },
-  "splash": { "background": "primary", "mark": "primary-foreground", "markWidth": 120 }
+  "icon": { "background": "card", "mark": "load", "markSize": 0.62 },
+  "splash": { "background": "card", "mark": "load", "markWidth": 120 }
 }

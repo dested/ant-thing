@@ -4,8 +4,9 @@
  *
  * ONE theme. There is no dark mode and no toggle: the look (light or dark) is
  * these values, and `color-scheme` says which (it must equal project.json
- * `look.scheme`). Until the kickoff (.claude/skills/kickoff) replaces them,
- * these are a neutral placeholder.
+ * `look.scheme`). The look is "Overhead camera": the lab footage itself. A cool
+ * grey-green bench, lighter paper for the arena, white acrylic, ink, and the
+ * load's signal red as the only loud colour. See ui.md.
  *
  * After editing: `bun run tokens` regenerates colors.json (hex copies for what
  * can't read CSS: native splash and system UI, <meta name="theme-color">, the
@@ -13,35 +14,41 @@
 
 :root {
   color-scheme: light;
-  /* The surface rule: corner radius and the card's elevation (`shadow-card`). */
-  --radius: 0.625rem;
-  --card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  /* Font stacks (web + desktop map them to font-sans / font-display / font-mono
-   * in app.css; mobile loads its fonts with expo-font). */
-  --font-body: ui-sans-serif, system-ui, sans-serif;
-  --font-heading: ui-sans-serif, system-ui, sans-serif;
+  /* The surface rule: instrument-flat. Small corners, hairlines, no shadows. */
+  --radius: 0.25rem;
+  --card-shadow: none;
+  /* One family; headings use its condensed width (see app.css). */
+  --font-body: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-code: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --success: oklch(0.627 0.17 149.2);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.769 0.165 70.1);
-  --warning-foreground: oklch(0.205 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* Bench (page), paper (arena floor, cards), acrylic (walls, popovers), ink. */
+  --background: oklch(0.872 0.008 128);
+  --foreground: oklch(0.205 0.012 140);
+  --card: oklch(0.935 0.006 122);
+  --card-foreground: oklch(0.205 0.012 140);
+  --popover: oklch(0.985 0.003 122);
+  --popover-foreground: oklch(0.205 0.012 140);
+  --primary: oklch(0.205 0.012 140);
+  --primary-foreground: oklch(0.985 0.003 122);
+  --secondary: oklch(0.825 0.009 128);
+  --secondary-foreground: oklch(0.205 0.012 140);
+  --muted: oklch(0.845 0.008 128);
+  --muted-foreground: oklch(0.43 0.014 140);
+  --accent: oklch(0.795 0.011 128);
+  --accent-foreground: oklch(0.205 0.012 140);
+  --destructive: oklch(0.54 0.215 27);
+  --destructive-foreground: oklch(0.985 0.003 122);
+  --success: oklch(0.52 0.13 150);
+  --success-foreground: oklch(0.985 0.003 122);
+  --warning: oklch(0.83 0.165 86);
+  --warning-foreground: oklch(0.205 0.012 140);
+  --border: oklch(0.205 0.012 140 / 16%);
+  --input: oklch(0.205 0.012 140 / 28%);
+  --ring: oklch(0.205 0.012 140 / 50%);
+  /* The experiment's own colours: the load, and the paint dots that mark an ant's role. */
+  --load: oklch(0.54 0.215 27);
+  --marker: oklch(0.83 0.165 86);
+  --lifter: oklch(0.56 0.17 255);
+  --wall: oklch(0.985 0.003 122);
+  --ant: oklch(0.2 0.02 60);
 }

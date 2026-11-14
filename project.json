@@ -1,6 +1,6 @@
 {
   "name": "ant-thing",
-  "displayName": "Ant Thing",
+  "displayName": "Ant Movers",
   "scheme": "antthing",
   "bundleId": "com.dested.antthing",
   "appId": "com.dested.antthing",
@@ -14,5 +14,8 @@
   "easProjectId": null,
   "easOwner": "quickgame",
   "appleTeamId": null,
-  "look": null
+  "look": {
+    "scheme": "light",
+    "direction": "Overhead camera: the page is the lab footage, and everything else is quiet instrument chrome around it."
+  }
 }

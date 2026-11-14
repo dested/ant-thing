@@ -1,3 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 114 118" fill="currentColor">
-  <path d="M50 18A50 50 0 0 0 50 118ZM64 0A50 50 0 0 1 64 100Z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor">
+  <g transform="rotate(-24 50 50)">
+    <rect x="6" y="14" width="18" height="72" rx="2" />
+    <rect x="16" y="41" width="70" height="18" />
+    <rect x="76" y="27" width="18" height="46" rx="2" />
+  </g>
 </svg>

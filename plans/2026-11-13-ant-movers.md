@@ -42,8 +42,8 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
 
 ## Build order
 
-1. [ ] packages/sim: rng, geom (SAT contacts), shape, fields (wall SDF, scent), body solver, world, puzzle schema + presets
-2. [ ] bench: headless runs over seeds (solve rate, median), PNG snapshots; tune until the T puzzle solves
+1. [x] packages/sim: rng, geom (SAT contacts), shape, fields (wall SDF, scent), body solver, world, puzzle schema + presets
+2. [x] bench: headless runs over seeds (solve rate, median), PNG snapshots; tune until the T puzzle solves
 3. [ ] Kickoff look (tokens, fonts, mark, ui.md), `/` = the sim
 4. [ ] Renderer (canvas 2D: arena, walls, load, ants with legs, scent, roles x-ray, trace) + camera
 5. [ ] Controls, rule knobs, be-an-ant mode, move-it-yourself mode
@@ -57,3 +57,11 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
 ## Ledger
 
 - 2026-11-13: forked, init, demo dropped, DB ant_thing created. Next: step 1.
+- 2026-11-13: engine + bench done and committed. Findings worth keeping:
+  - Slit 126 (video estimate) is unsolvable for the 168 crossbar per the lattice planner; 140 is the tightest solvable. Preset uses 140.
+  - Defaults: conformity 1, noise 0.3, holdTime 120, homeProb 0.1, piano ants 400. 72% solve in 1200 s, median ~660 s (64 seeds).
+  - Conformity has an optimum: 0 → 0%, 0.25 → 38%, 0.5-1 → ~60%, 2 → 19%, 5 → 0% (260 ants, 48 seeds, 1200 s).
+  - Colony size: <=200 ants ~30%, 260 ~58%, 400 ~81%, 600 ~69% (48 seeds).
+  - Knowledge is gated on a nest trip or 20 s of free walking; stalled pulls drain it 4x (Sudd's realign/reposition).
+  - Tools: `bun bench/run.ts` (trials, --log), `bun bench/snap.ts` (PNG contact sheet), `bun bench/route.ts` (planner), `bench/sweep.sh`.
+  - Background sweep output: W:\junk\ant-thing\sweep1.txt

@@ -142,3 +142,10 @@ export const PRESETS: Preset[] = [
 export function preset(id: string): Preset | undefined {
   return PRESETS.find((p) => p.id === id)
 }
+
+/** A built-in puzzle that must exist (the home page's, the tests'). */
+export function requirePreset(id: string): Preset {
+  const found = preset(id)
+  if (!found) throw new Error(`No built-in puzzle is named "${id}"`)
+  return found
+}

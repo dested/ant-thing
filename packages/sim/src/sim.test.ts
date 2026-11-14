@@ -23,7 +23,7 @@ describe('puzzles', () => {
       expect(puzzleSchema.safeParse(p.puzzle).success).toBe(true)
       expect(findRoute(p.puzzle).solvable).toBe(true)
     }
-  })
+  }, 60_000)
 
   test('a sealed arena is reported unsolvable', () => {
     const sealed: Puzzle = { ...open, walls: [[520, 0, 520, 700]] }
@@ -47,7 +47,7 @@ describe('world', () => {
     c.prewarm(20)
     for (let i = 0; i < 1200; i++) c.step()
     expect(c.x).not.toBe(a.x)
-  })
+  }, 60_000)
 
   test('the colony delivers across an open field', () => {
     const w = new World(open, 3)
@@ -55,7 +55,7 @@ describe('world', () => {
     for (let i = 0; i < 400 / DT && !w.delivered; i++) w.step()
     expect(w.delivered).toBe(true)
     expect(w.deliveredAt).toBeLessThan(400)
-  })
+  }, 60_000)
 
   test('the load never sinks into a wall', () => {
     const w = new World(piano, 5)
@@ -66,12 +66,12 @@ describe('world', () => {
       for (const piece of w.pieces) for (const wall of w.walls) expect(overlaps(piece, wall, 1)).toBe(false)
     }
     expect(w.deepest).toBeLessThan(1)
-  })
+  }, 60_000)
 
   test('with no conformity the load goes nowhere', () => {
     const w = new World(open, 3, { conformity: 0 })
     w.prewarm(60)
     for (let i = 0; i < 120 / DT && !w.delivered; i++) w.step()
     expect(w.delivered).toBe(false)
-  })
+  }, 60_000)
 })

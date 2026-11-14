@@ -1,10 +1,10 @@
 {
-  "name": "Ant Thing",
-  "short_name": "Ant Thing",
+  "name": "Ant Movers",
+  "short_name": "Ant Movers",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#ffffff",
-  "background_color": "#171717",
+  "theme_color": "#d3d6d0",
+  "background_color": "#e9eae6",
   "icons": [
     {
       "src": "/icon-192.png",
