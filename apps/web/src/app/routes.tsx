@@ -12,7 +12,6 @@ import { Layout } from './layout'
 async function dashboardLoader({ context }: LoaderFunctionArgs): Promise<null> {
   // Warm the page's queries so the dashboard renders with data.
   const { queryClient, trpc } = context.get(clientsContext)
-  await queryClient.prefetchQuery(trpc.posts.list.queryOptions()) // demo
   return null
 }
 

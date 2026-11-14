@@ -9,13 +9,3 @@ datasource db {
   provider = "postgresql"
 }
 
-// demo:start: the template Post demo (bun run demo:drop removes it and writes the drop migration)
-model Post {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("post")
-}
-// demo:end
