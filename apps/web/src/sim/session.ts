@@ -44,6 +44,8 @@ export interface Snapshot {
   scentRule: boolean
   /** True while the run is the puzzle as published: default rules, its own ant count, nobody helping. */
   standard: boolean
+  /** True when a rule knob or the ant count is off its default. */
+  changed: boolean
 }
 
 export interface Finish {
@@ -80,6 +82,7 @@ export const IDLE: Snapshot = {
   informedTime: DEFAULT_PARAMS.informedTime,
   scentRule: DEFAULT_PARAMS.scent,
   standard: true,
+  changed: false,
 }
 
 function randomSeed(): number {
@@ -184,6 +187,7 @@ export class Session {
       informedTime: this.params.informedTime,
       scentRule: this.params.scent,
       standard: this.standard,
+      changed: this.rulesChanged(),
     }
   }
 
@@ -196,14 +200,17 @@ export class Session {
     return world
   }
 
-  private isStandard(): boolean {
+  private rulesChanged(): boolean {
     return (
-      this.mode !== 'ant' &&
-      this.puzzle.ants === this.basePuzzle.ants &&
-      this.params.conformity === DEFAULT_PARAMS.conformity &&
-      this.params.informedTime === DEFAULT_PARAMS.informedTime &&
-      this.params.scent === DEFAULT_PARAMS.scent
+      this.puzzle.ants !== this.basePuzzle.ants ||
+      this.params.conformity !== DEFAULT_PARAMS.conformity ||
+      this.params.informedTime !== DEFAULT_PARAMS.informedTime ||
+      this.params.scent !== DEFAULT_PARAMS.scent
     )
+  }
+
+  private isStandard(): boolean {
+    return this.mode !== 'ant' && !this.rulesChanged()
   }
 
   /** Start over. A new colony unless a seed is given. */

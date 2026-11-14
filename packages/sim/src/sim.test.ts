@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { buildShape, DT, findRoute, isConnected, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
+import { buildShape, CARRY, DT, findRoute, isConnected, NEST, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
 
 const piano = preset('piano-movers')?.puzzle
 const open = preset('open-field')?.puzzle
@@ -66,6 +66,25 @@ describe('world', () => {
       for (const piece of w.pieces) for (const wall of w.walls) expect(overlaps(piece, wall, 1)).toBe(false)
     }
     expect(w.deepest).toBeLessThan(1)
+  }, 60_000)
+
+  test('no free ant stays wedged in a corner', () => {
+    // Scent used to pass through walls: ants pressed toward it and piled up where a wall meets the edge.
+    const w = new World(piano, 2)
+    w.prewarm(45)
+    for (let i = 0; i < 200 / DT; i++) w.step()
+    const looks: { x: number; y: number; free: boolean }[][] = []
+    for (let look = 0; look < 3; look++) {
+      looks.push(w.ants.map((a) => ({ x: a.x, y: a.y, free: a.state !== CARRY && a.state !== NEST })))
+      for (let i = 0; i < 4 / DT; i++) w.step()
+    }
+    let stuck = 0
+    w.ants.forEach((_, i) => {
+      const [a, b, c] = [looks[0]?.[i], looks[1]?.[i], looks[2]?.[i]]
+      if (!a || !b || !c || !a.free || !b.free || !c.free) return
+      if (Math.hypot(a.x - b.x, a.y - b.y) < 10 && Math.hypot(a.x - c.x, a.y - c.y) < 10) stuck++
+    })
+    expect(stuck).toBeLessThanOrEqual(1)
   }, 60_000)
 
   test('with no conformity the load goes nowhere', () => {

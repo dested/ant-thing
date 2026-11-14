@@ -273,7 +273,7 @@ function Panel({
           className="flex-1 border-input bg-transparent shadow-none">
           New colony
         </Button>
-        {!snap.standard && (
+        {snap.changed && (
           <Button
             variant="outline"
             onClick={() => session?.resetRules()}

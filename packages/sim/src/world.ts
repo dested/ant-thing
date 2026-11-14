@@ -54,6 +54,14 @@ export interface Ant {
   role: number
   /** Seconds on the load. */
   held: number
+  /** Where she was when her progress was last checked, and how long ago: an ant who gets nowhere gives up. */
+  ax: number
+  ay: number
+  still: number
+  /** Steps in that time on which a wall pushed her back. */
+  bumps: number
+  /** Seconds left of ignoring every scent after giving up. */
+  lost: number
   /** Tick offset that staggers the expensive checks. */
   phase: number
 }
@@ -80,6 +88,11 @@ export interface Stats {
 }
 
 const GRAB = 6
+/** How close an ant's middle gets to a wall. */
+const STANDOFF = 4
+/** An ant pressed against a wall who covers less than this in GIVE_UP seconds is stuck. */
+const GIVE_UP = 1.2
+const GIVE_UP_DIST = 12
 const SITE_REACH = 7
 const TURN = 7
 const SENSE_D = 18
@@ -174,6 +187,11 @@ export class World {
         homeDir: 0,
         role: 0,
         held: 0,
+        ax: puzzle.nest.x,
+        ay: puzzle.nest.y,
+        still: 0,
+        bumps: 0,
+        lost: 0,
         phase: i % 60,
       })
     }
@@ -576,6 +594,9 @@ export class World {
     ant.role = 0
     ant.free = 0
     ant.informed = 0
+    ant.ax = ant.x
+    ant.ay = ant.y
+    ant.still = 0
     const player = this.player
     if (player && this.ants[player.ant] === ant) {
       ant.state = PLAYER
@@ -635,7 +656,7 @@ export class World {
     const sample = (ang: number): number => {
       const px = ant.x + Math.cos(ang) * SENSE_D
       const py = ant.y + Math.sin(ang) * SENSE_D
-      return f.dist(px, py) < 1 ? UNKNOWN : f.read(grid, px, py)
+      return f.hidden(ant.x, ant.y, px, py) ? UNKNOWN : f.read(grid, px, py)
     }
     const c = sample(h)
     const l = sample(h - SENSE_A)
@@ -672,6 +693,9 @@ export class World {
         ant.marks = true
         ant.free = 99
         ant.cool = 0
+        ant.ax = ant.x
+        ant.ay = ant.y
+        ant.still = 0
         continue
       }
 
@@ -685,6 +709,23 @@ export class World {
       ant.trip += DT
       ant.turn += -ant.turn * 2 * DT + this.rng.gauss() * wander
       let h = ant.h + ant.turn * DT
+
+      // Getting nowhere (a corner, a wall between her and what she smells): turn around and wander a while.
+      ant.still += DT
+      if (ant.still >= GIVE_UP) {
+        if (ant.bumps > 20 && Math.hypot(ant.x - ant.ax, ant.y - ant.ay) < GIVE_UP_DIST) {
+          ant.lost = this.rng.range(2, 4)
+          ant.cool = Math.max(ant.cool, ant.lost)
+          ant.goal = -1
+          h = ant.h + Math.PI + this.rng.range(-1, 1)
+        }
+        ant.ax = ant.x
+        ant.ay = ant.y
+        ant.still = 0
+        ant.bumps = 0
+      }
+      const lost = ant.lost > 0
+      if (lost) ant.lost -= DT
 
       if (ant.state === SEARCH) {
         const dx = ant.x - this.x
@@ -708,7 +749,7 @@ export class World {
           } else {
             ant.goal = -1
           }
-        } else if (!near) {
+        } else if (!near && !lost) {
           const fh = this.follow(f.food, ant, h)
           if (!Number.isNaN(fh)) h = fh
         }
@@ -723,12 +764,12 @@ export class World {
         }
         if (ant.marks && ant.state === SEARCH) f.mark(f.home, ant.x, ant.y, ant.trip)
       } else {
-        const fh = P.scent ? this.follow(f.home, ant, h) : Number.NaN
-        if (Number.isNaN(fh)) {
+        const fh = P.scent && !lost ? this.follow(f.home, ant, h) : Number.NaN
+        if (!Number.isNaN(fh)) {
+          h = fh
+        } else if (!lost) {
           const d = wrap(Math.atan2(nest.y - ant.y, nest.x - ant.x) - h)
           h += Math.max(-TURN * DT, Math.min(TURN * DT, d)) * 0.6
-        } else {
-          h = fh
         }
         if (ant.marks) {
           f.mark(f.food, ant.x, ant.y, ant.trip)
@@ -740,7 +781,7 @@ export class World {
           ant.cool = this.rng.range(0.5, 2.5)
           continue
         }
-        if (nd < NEST_R * 2) {
+        if (nd < NEST_R * 2 && !lost) {
           const d = wrap(Math.atan2(nest.y - ant.y, nest.x - ant.x) - h)
           h += Math.max(-TURN * DT, Math.min(TURN * DT, d))
         }
@@ -776,7 +817,7 @@ export class World {
     const f = this.fields
     let h = heading
     const ahead = f.dist(ant.x + Math.cos(h) * 9, ant.y + Math.sin(h) * 9)
-    if (ahead < 3) {
+    if (ahead < STANDOFF + 2) {
       const l = f.dist(ant.x + Math.cos(h - 1) * 9, ant.y + Math.sin(h - 1) * 9)
       const r = f.dist(ant.x + Math.cos(h + 1) * 9, ant.y + Math.sin(h + 1) * 9)
       h += (l > r ? -1 : 1) * 10 * DT
@@ -785,15 +826,16 @@ export class World {
     let x = ant.x + Math.cos(h) * step
     let y = ant.y + Math.sin(h) * step
     const d = f.dist(x, y)
-    if (d < 2) {
+    if (d < STANDOFF) {
+      ant.bumps++
       let gx = f.dist(x + 2, y) - f.dist(x - 2, y)
       let gy = f.dist(x, y + 2) - f.dist(x, y - 2)
       const gl = Math.hypot(gx, gy)
       if (gl > 1e-6) {
         gx /= gl
         gy /= gl
-        x += gx * (2 - d)
-        y += gy * (2 - d)
+        x += gx * (STANDOFF - d)
+        y += gy * (STANDOFF - d)
       } else {
         x = ant.x
         y = ant.y

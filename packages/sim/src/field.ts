@@ -27,6 +27,8 @@ export class Fields {
   readonly gh: number
   readonly home: Float32Array
   readonly food: Float32Array
+  /** Per scent cell, which of its 3×3 neighbours can be smelled from it (nine bits): scent stops at walls. */
+  private readonly open: Uint16Array
 
   constructor(w: number, h: number, walls: readonly Wall[]) {
     this.w = w
@@ -38,7 +40,36 @@ export class Fields {
     this.gh = Math.ceil(h / this.gres)
     this.home = new Float32Array(this.gw * this.gh).fill(UNKNOWN)
     this.food = new Float32Array(this.gw * this.gh).fill(UNKNOWN)
+    this.open = new Uint16Array(this.gw * this.gh)
     this.buildSdf(walls)
+    this.buildOpen()
+  }
+
+  /** A neighbour cell can be smelled when neither it nor the point halfway to it is inside a wall. */
+  private buildOpen(): void {
+    const { gw, gh, gres, open } = this
+    for (let j = 0; j < gh; j++) {
+      for (let i = 0; i < gw; i++) {
+        const cx = (i + 0.5) * gres
+        const cy = (j + 0.5) * gres
+        let mask = 0
+        let bit = 1
+        for (let dj = -1; dj <= 1; dj++) {
+          for (let di = -1; di <= 1; di++) {
+            const ii = i + di
+            const jj = j + dj
+            if (ii >= 0 && jj >= 0 && ii < gw && jj < gh) {
+              const nx = (ii + 0.5) * gres
+              const ny = (jj + 0.5) * gres
+              const self = di === 0 && dj === 0
+              if (self || (this.dist(nx, ny) > 0 && this.dist((cx + nx) / 2, (cy + ny) / 2) > 0)) mask |= bit
+            }
+            bit <<= 1
+          }
+        }
+        open[j * gw + i] = mask
+      }
+    }
   }
 
   private buildSdf(walls: readonly Wall[]): void {
@@ -111,24 +142,31 @@ export class Fields {
     return j * this.gw + i
   }
 
-  /** Scent at a point: the lowest value in the 3×3 cells around it (an ant's antennae cover about that). */
+  /** Scent at a point: the lowest value in the 3×3 cells around it that no wall hides (about an antenna's reach). */
   read(grid: Float32Array, x: number, y: number): number {
     const i = Math.floor(x / this.gres)
     const j = Math.floor(y / this.gres)
     if (i < 0 || j < 0 || i >= this.gw || j >= this.gh) return UNKNOWN
+    const k = j * this.gw + i
+    const mask = this.open[k] ?? 0
     let best = UNKNOWN
-    const j0 = j > 0 ? j - 1 : j
-    const j1 = j < this.gh - 1 ? j + 1 : j
-    const i0 = i > 0 ? i - 1 : i
-    const i1 = i < this.gw - 1 ? i + 1 : i
-    for (let jj = j0; jj <= j1; jj++) {
-      const row = jj * this.gw
-      for (let ii = i0; ii <= i1; ii++) {
-        const v = grid[row + ii] ?? UNKNOWN
-        if (v < best) best = v
+    let bit = 1
+    for (let dj = -1; dj <= 1; dj++) {
+      const row = k + dj * this.gw
+      for (let di = -1; di <= 1; di++) {
+        if (mask & bit) {
+          const v = grid[row + di] ?? UNKNOWN
+          if (v < best) best = v
+        }
+        bit <<= 1
       }
     }
     return best
+  }
+
+  /** True when a wall stands at a point or halfway to it: nothing is smelled or felt across it. */
+  hidden(x: number, y: number, px: number, py: number): boolean {
+    return this.dist(px, py) < 1 || this.dist((x + px) / 2, (y + py) / 2) < 1
   }
 
   /** Lay scent: keep the lower (fresher) of what's there and what this ant carries. */
@@ -166,7 +204,7 @@ export class Fields {
       const cy = Math.sin(a)
       const px = x + cx * radius
       const py = y + cy * radius
-      if (this.dist(px, py) < 1) continue
+      if (this.hidden(x, y, px, py)) continue
       const v = this.read(grid, px, py)
       if (v >= UNKNOWN) continue
       const base = here >= UNKNOWN ? v + 2 : here
