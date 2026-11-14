@@ -1,0 +1,77 @@
+import { describe, expect, test } from 'bun:test'
+import { buildShape, DT, findRoute, isConnected, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
+
+const piano = preset('piano-movers')?.puzzle
+const open = preset('open-field')?.puzzle
+if (!piano || !open) throw new Error('presets missing')
+
+describe('shape', () => {
+  test('the T is three overlapping bars with grip points all the way round', () => {
+    const shape = buildShape(tCells(), 14)
+    expect(shape.rects.length).toBe(3)
+    expect(shape.cellCount).toBe(72)
+    // Perimeter 2 * (22 + 12) cells plus the inner notches, two grip points per cell edge.
+    expect(shape.sites.length).toBeGreaterThan(130)
+    expect(isConnected(tCells())).toBe(true)
+    expect(isConnected([[0, 0], [2, 0]])).toBe(false)
+  })
+})
+
+describe('puzzles', () => {
+  test('every preset passes the schema and can be solved by the planner', () => {
+    for (const p of PRESETS) {
+      expect(puzzleSchema.safeParse(p.puzzle).success).toBe(true)
+      expect(findRoute(p.puzzle).solvable).toBe(true)
+    }
+  })
+
+  test('a sealed arena is reported unsolvable', () => {
+    const sealed: Puzzle = { ...open, walls: [[520, 0, 520, 700]] }
+    expect(findRoute(sealed).solvable).toBe(false)
+  })
+})
+
+describe('world', () => {
+  test('a seed replays exactly', () => {
+    const a = new World(piano, 7)
+    const b = new World(piano, 7)
+    a.prewarm(20)
+    b.prewarm(20)
+    for (let i = 0; i < 1200; i++) {
+      a.step()
+      b.step()
+    }
+    expect([a.x, a.y, a.a]).toEqual([b.x, b.y, b.a])
+    expect(a.stats).toEqual(b.stats)
+    const c = new World(piano, 8)
+    c.prewarm(20)
+    for (let i = 0; i < 1200; i++) c.step()
+    expect(c.x).not.toBe(a.x)
+  })
+
+  test('the colony delivers across an open field', () => {
+    const w = new World(open, 3)
+    w.prewarm(60)
+    for (let i = 0; i < 400 / DT && !w.delivered; i++) w.step()
+    expect(w.delivered).toBe(true)
+    expect(w.deliveredAt).toBeLessThan(400)
+  })
+
+  test('the load never sinks into a wall', () => {
+    const w = new World(piano, 5)
+    w.prewarm(60)
+    for (let i = 0; i < 240 / DT; i++) {
+      w.step()
+      if (i % 20 !== 0) continue
+      for (const piece of w.pieces) for (const wall of w.walls) expect(overlaps(piece, wall, 1)).toBe(false)
+    }
+    expect(w.deepest).toBeLessThan(1)
+  })
+
+  test('with no conformity the load goes nowhere', () => {
+    const w = new World(open, 3, { conformity: 0 })
+    w.prewarm(60)
+    for (let i = 0; i < 120 / DT && !w.delivered; i++) w.step()
+    expect(w.delivered).toBe(false)
+  })
+})

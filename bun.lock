@@ -71,6 +71,17 @@
         "typescript": "catalog:",
       },
     },
+    "packages/sim": {
+      "name": "@app/sim",
+      "dependencies": {
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@resvg/resvg-js": "2.6.2",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/tokens": {
       "name": "@app/tokens",
       "dependencies": {
@@ -116,6 +127,8 @@
   },
   "packages": {
     "@app/brand": ["@app/brand@workspace:packages/brand"],
+
+    "@app/sim": ["@app/sim@workspace:packages/sim"],
 
     "@app/tokens": ["@app/tokens@workspace:packages/tokens"],
 
