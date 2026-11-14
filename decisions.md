@@ -1,6 +1,31 @@
-# ant-thing — Decisions
+# Ant Movers (ant-thing) — Decisions
 
 > Append-only log of choices with rejected alternatives. Never reverse one silently — add a superseding entry.
+
+## 2026-11-14 — Speed comes from workers on every core, not WASM
+
+**Why:** Sal asked for faster than 64× ("wasm? super fast processor?"). The step was made 1.5× cheaper in TypeScript (`hyp` instead of `Math.hypot`, sniffing every third tick). Max speed gives the sim 28 ms of each frame. Past that, one colony is one thread, so the real gain is many colonies: the race and the charts run headless colonies in Web Workers, one per core (about 1,800× real time on 16 cores). Picking a raced colony replays its seed in the lab.
+**Rejected:** a WASM/Rust engine (outside the stack; roughly 1.5 to 2× on one thread, and it would split the engine the server, bench and page share), moving the single lab sim into a worker (the renderer reads the world directly every frame).
+
+## 2026-11-14 — The page's conformity stays at 1 although 0.5 delivers more often
+
+**Why:** the bench (`bench/science.ts`, 96 colonies a bar, 30 min cap) puts 0.5 ahead of 1. The default was tuned by hand before that sweep existed, and every other number on the page was measured at 1. The chart shows the red bar is not the tallest, which is the honest picture. Changing it means rerunning the whole science data set and the engine tests.
+**Rejected:** quietly moving the default to the best bar after seeing the chart.
+
+## 2026-11-14 — Publishing is gated by an exhaustive planner; runs are trusted within a physical bound
+
+**Why:** a gallery of impossible puzzles is worthless, so `puzzles.publish` runs `findRoute` (configuration-space BFS) in a Bun Worker, one at a time with a 30 s limit, and refuses a puzzle with no way through. Run times can't be verified by replay: the sim is deterministic only within one JS engine (trig differs between V8 and JSC), so `puzzles.record` only refuses times faster than `fastestPossible`.
+**Rejected:** replaying runs on the server (non-deterministic across engines, and unbounded CPU), no check at all, a looser sampled planner (false "solvable").
+
+## 2026-11-14 — No accounts: a salted IP hash, in-memory limits, a token for moderation
+
+**Why:** the fork is `--no-auth`; nobody should sign up to watch ants. `ctx.who` is a salted hash of the caller's IP, used for rate limits, one report per caller and "who published this". Three reports hide a puzzle. `/admin` takes `ADMIN_TOKEN`. `PUBLISH_OFF=1` is the kill switch. Titles pass `server/titles.ts`. Built-in puzzles are code (`PRESETS`) with a DB row created lazily for stats only, because e2e truncates every table.
+**Rejected:** better-auth accounts, free-text author names, seeding presets into the DB at boot.
+
+## 2026-11-14 — Look: "Overhead camera"
+
+**Why:** Sal said "last chance to ask questions", so the look was chosen without a round of directions. The page is the lab footage: a grey-green bench, paper arena, white acrylic walls, ink ants, and the load's red as the only loud colour. Chrome is instrument-flat (hairlines, 0.25rem corners, no shadows). One family, Bricolage Grotesque, condensed for headings. Light, and the only theme. Details in `ui.md`.
+**Rejected:** a dark "terminal" look (hides ink ants and scent overlays), cartoon ants, card-and-shadow dashboard chrome.
 
 ## 2026-10-25 — The Post demo is template-only, gated in forks by `project.json` `template: true`
 

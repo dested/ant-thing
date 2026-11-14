@@ -1,128 +1,99 @@
-# ant-thing — UI / Visual Language
+# Ant Movers — UI / Visual Language
 
-> Source of truth for how this looks and feels. Follow it for anything visual, and keep it current as part of finishing a UI change.
-> **Template until the kickoff** (`.claude/skills/kickoff`): it fills in every `<…>`, replaces the placeholder values, and deletes this line. Fork-owned: `bun run sync` keeps this file as the fork wrote it.
+> Source of truth for how this looks and feels. Follow it for anything visual, and keep it current as part of finishing a UI change. Fork-owned: `bun run sync` keeps this file as the fork wrote it.
 
 ## North star
 
-**<Direction name>: <one sentence on what it should feel like>.**
+**Overhead camera: the page is the lab footage, and everything else is quiet instrument chrome around it.**
 
-- Fails as: <too X: what that looks like>
-- Fails as: <too Y: what that looks like>
-- Signature move: <the one thing that makes it recognisable>
+- Fails as: a dashboard. Cards, shadows, gradients, coloured badges around a small canvas.
+- Fails as: a toy. Cartoon ants, rounded bubbly controls, playful copy.
+- Signature move: the arena fills the first screen edge to edge, lit like a bench under a lamp, and the load's signal red is the only loud colour on the page.
 
-## Rules (every project)
+## Rules
 
-1. **One theme.** `packages/tokens/tokens.css` is the look: `color-scheme` there equals `project.json` `look.scheme`. No dark mode, no toggle, no following the OS. `dark:` classes compile but never match (`theme.css`), so don't write them.
-2. **Tokens over values.** Classes come from tokens (`bg-primary`, `text-muted-foreground`, `rounded-lg`, `shadow-card`); code that needs hex imports `colors` from `@app/tokens`. Never a Tailwind palette class (`bg-blue-500`) or a literal color.
-3. **A brand change edits `tokens.css` values**, then `bun run tokens` and `bun run brand`. Never a second `:root`, a `.dark` block, or brand colors in `app.css` / `global.css`. A new role goes in `theme.css` (mapping) and `tokens.css` (value).
-4. **No eyebrows** (no kicker above a heading), **no taglines, helper text or captions**, **no period at the end of a heading.** If a screen needs words to make sense, fix the layout, naming or grouping.
+1. **One theme.** `packages/tokens/tokens.css` is the look (light). No dark mode, no toggle, no following the OS. `dark:` classes never match.
+2. **Tokens over values.** Classes come from tokens (`bg-popover`, `text-muted-foreground`, `border-input`); canvas and SVG code imports `colors` from `@app/tokens`. Never a Tailwind palette class. The only literal colours are translucent ink/shadow on the canvas (`rgba(20,24,20,…)`).
+3. **A colour change edits `tokens.css`**, then `bun run tokens` and `bun run brand`.
+4. **No eyebrows, no taglines, no helper text or captions, no period at the end of a heading.** A control gets one label. If a screen needs explaining, rename or regroup.
+5. **Red means the load.** `load` (same value as `destructive`) marks the load, its path, and the page's own setting in a chart. Nothing else is red except an error message.
 
 ## Palette
 
-| Role                  | Class                                         | Use                         | Value |
-| --------------------- | --------------------------------------------- | --------------------------- | ----- |
-| Background            | `bg-background`                               | page canvas                 | <…>   |
-| Foreground            | `text-foreground`                             | primary text                | <…>   |
-| Card / Popover        | `bg-card` / `bg-popover`                      | raised surfaces             | <…>   |
-| Primary               | `bg-primary` / `text-primary-foreground`      | the main action             | <…>   |
-| Secondary             | `bg-secondary`                                | quiet actions, chips        | <…>   |
-| Muted                 | `bg-muted` / `text-muted-foreground`          | secondary text, wells       | <…>   |
-| Accent                | `bg-accent`                                   | hover and selected surfaces | <…>   |
-| Destructive           | `text-destructive` / `bg-destructive`         | errors, dangerous actions   | <…>   |
-| Success / Warning     | `bg-success` / `bg-warning` (+ `-foreground`) | confirmations, cautions     | <…>   |
-| Border / Input / Ring | `border`, `border-input`, `ring-ring`         | hairlines, fields, focus    | <…>   |
+| Role | Class | Use | Value |
+| --- | --- | --- | --- |
+| Background (bench) | `bg-background` | page, panels | `#d3d6d0` |
+| Card (paper) | `bg-card` | arena floor, thumbnails | `#e9eae6` |
+| Popover (acrylic) | `bg-popover` | overlays on the arena, tooltips, walls | `#fafaf8` |
+| Foreground (ink) | `text-foreground`, `bg-foreground` | text, pressed controls, primary button | `#141913` |
+| Muted | `text-muted-foreground` | readout labels, axis text, context bars | `#4c524b` |
+| Accent | `bg-accent` | hover | `#babeb6` |
+| Border / Input | `border`, `border-input` | hairlines (16% ink), control outlines (28% ink) | |
+| Load | `bg-load`, `fill-load` | the load, its path, "this page's setting" | `#ce0e1a` |
+| Marker | `bg-marker` | paint dot: an ant who knows the way | `#f7be1c` |
+| Lifter | `bg-lifter`, `fill-lifter` | paint dot: a lifting ant; planner ghosts; "this machine" in a chart | `#1a73d5` |
+| Success | `text-success` | "There is a way through", a delivered colony's frame | `#1d7d3e` |
+| Destructive | `text-destructive` | errors, "No way through" | `#ce0e1a` |
 
 ## Type
 
-| Role    | Family   | Class / token                                 |
-| ------- | -------- | --------------------------------------------- |
-| Display | <family> | `font-display` (`--font-heading`)             |
-| Body    | <family> | `font-sans`, the body default (`--font-body`) |
-| Mono    | <family> | `font-mono` (`--font-code`)                   |
+One family: **Bricolage Grotesque Variable** (`@fontsource-variable/bricolage-grotesque`, `wdth` axis).
 
-Scale: page H1 `font-display text-4xl font-bold tracking-tight`, section `text-xl font-semibold`, body default / `text-sm`, secondary `text-sm text-muted-foreground`. <Adjust to the direction.>
+| Role | Class | Notes |
+| --- | --- | --- |
+| Display | `font-display` | the same family at `wdth` 78 (condensed), `font-bold` / `font-extrabold` |
+| Body | default | `wdth` 100 |
+| Numbers | `tabular` | tabular figures; every readout, clock and count |
 
-Web and desktop load fonts with `@fontsource-variable/*` imported at the top of `app.css`; mobile loads the same families with `expo-font` + `@expo-google-fonts/*` (see Mobile).
+Scale: big readout (the clock, a race score) `font-display text-5xl font-extrabold leading-none`; page/section heading in prose `font-display text-4xl font-extrabold leading-none`; panel title `font-display text-2xl font-bold`; chart or rule title `font-display text-xl font-bold`; body `text-base leading-relaxed` capped at `max-w-[65ch]`; controls and readouts `text-sm`.
 
 ## Surfaces
 
-- Radius: `--radius` = <…> (`rounded-md` controls, `rounded-xl` cards; the scale lives in `theme.css`).
-- Elevation: cards use `shadow-card` (`--card-shadow` = <…>); <borders vs fills vs shadows: the rule>.
-- Container: <width and padding of the main column>.
+- Instrument-flat: `--radius` 0.25rem, hairlines, **no shadows** in the chrome. The only shadows are painted on the canvas (walls, the load) because the lamp is overhead.
+- Controls are outlined, not filled: `border-input bg-transparent shadow-none`. A pressed segment or chip inverts to ink (`aria-pressed:bg-foreground aria-pressed:text-background`). One filled ink button per screen at most (Publish, Bite).
+- Lab layout: `grid lg:grid-cols-[minmax(0,1fr)_20rem]`, arena left, a 20rem panel right, full height under the 3rem header. Below `lg` the panel stacks under a 3:2 arena.
+- Prose (the science section): one column, `max-w-3xl`, `px-5 py-16`, sections `gap-16`.
+- Lists of facts are hairline rows (`border-t`/`border-b`, label left in muted, value right), two columns in the panel.
 
 ## Motion
 
-<The one motion moment and its feel (duration, easing). Everything else is instant.>
+The sim is the only thing that moves. Chrome changes are instant: no entrance animations, no hover transitions.
 
 ## Components
 
-Reuse these; restyle them to the surface rule, don't hand-roll. They take `className` (merged with `cn()`); Base UI's `render` prop swaps the element (no `asChild`).
+| Component | File | Notes |
+| --- | --- | --- |
+| `Lab` | `apps/web/src/sim/lab.tsx` | the arena + panel; also hosts the race board and panel |
+| `Segmented`, `Chip` | `apps/web/src/components/ui/segmented.tsx` | one-of-few joined buttons; an on/off view layer |
+| `Slider`, `Switch` | `apps/web/src/components/ui/{slider,switch}.tsx` | Base UI, hairline track, square ink thumb |
+| `Button`, `Input` | `apps/web/src/components/ui/` | Base UI; `type="button"` by default |
+| `PuzzleThumb` | `apps/web/src/sim/thumb.tsx` | SVG still of a puzzle |
+| `SweepChart` | `apps/web/src/science/sweep-chart.tsx` | column chart: grey context bars, red for the page's setting, blue dots for the visitor's run |
+| `RaceBoard` | `apps/web/src/race/board.tsx` | canvas grid of mini arenas |
+| `Keyhole` | `apps/web/src/space/keyhole.tsx` | inset map on the arena |
 
-| Component                   | File (web)                            | Notes                                                                                                            |
-| --------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `Button` + `buttonVariants` | `src/components/ui/button.tsx`        | Base UI Button, `type="button"` by default; default/destructive/outline/secondary/ghost/link; default/sm/lg/icon |
-| `Card` family               | `src/components/ui/card.tsx`          | Card / Header / Title / Description / Content / Footer                                                           |
-| `Input`, `Label`            | `src/components/ui/{input,label}.tsx` | Base UI Input; pair `Label htmlFor` with `Input id`                                                              |
-| `KickoffRibbon`             | `src/components/kickoff-ribbon.tsx`   | dev only, while `look` is null; renders nothing after the kickoff                                                |
-| `cn()`                      | `src/lib/utils.ts`                    | re-exports shadcn's `cn` package (clsx + tailwind-merge in one)                                                  |
-| Icons                       | `lucide-react`                        | (`lucide-react-native` on mobile)                                                                                |
+Charts: columns ≤ 24px with a 4px rounded top, hairline grid at 0/50/100%, value on the cap, text in text tokens (never the series colour), a legend row under the plot, a tooltip on hover and focus, an `sr-only` table.
 
-Add more with `bunx --bun shadcn@latest add <name>` (Base UI components in `src/components/ui/`; their `import { cn } from "cn"` works as is), then restyle it. Never add `@radix-ui/*`.
+## Icon
 
-```tsx
-// Link styled as a button (no asChild here)
-;<Link to="/" className={buttonVariants()}>
-  Back home
-</Link>
+`packages/brand/mark.svg` + `brand.json` → `bun run brand`. Never hand-edit an output.
 
-// Or let the Button render the Link
-<Button nativeButton={false} render={<Link to="/" />}>
-  Back home
-</Button>
+## States
 
-// Inline error
-{
-  error && <p className="text-sm text-destructive">{error}</p>
-}
-```
+- **Loading:** one muted line ("Looking for a way through", "Mapping every pose"). No spinners.
+- **Empty:** one short sentence with the way out ("Nobody has published a puzzle yet").
+- **Pending action:** disable the button and swap its label ("Publishing").
+- **Error:** `text-sm font-medium text-destructive` beside the control; it says what to do next.
 
-## Icon and splash
+## Voice
 
-One mark, every surface: `packages/brand/mark.svg` (one color, `fill="currentColor"`) and `packages/brand/brand.json` (token roles for the icon tile and the splash) → `bun run brand`. The icon is the mark on its tile; the splash is the brand color full-bleed with the bare mark, never a tile on a different color. Never hand-edit an output.
-
-## States (every async surface)
-
-- **Loading:** one muted line, or a skeleton in the surface style.
-- **Empty:** one short sentence, no illustration unless the direction calls for one.
-- **Pending action:** disable the button and swap its label ("Posting…").
-- **Error:** inline `text-destructive` under the form; route errors fall to the root `ErrorBoundary` (`src/app/error-boundary.tsx`).
-
-## Voice / copy
-
-<The direction's voice.> Sentence case, short imperative buttons ("Sign in", "Post"). No marketing fluff, exclamation marks, ALL-CAPS or emoji in UI.
-
-## Mobile (apps/mobile)
-
-Same tokens and class names through Uniwind (`global.css` imports `tailwindcss`, `uniwind`, then `theme.css` and `tokens.css`).
-
-- **One scheme:** `userInterfaceStyle` comes from `look.scheme`, so keyboards, alerts and pickers match, and `_layout.tsx` pins `Uniwind.setTheme` to it so the OS never flips the app. `dark:` and `light:` never match. The native splash and `BrandSplash` paint brand.json `splash.background` with the bare mark (never a tile on another color), then the mark grows slightly as the overlay fades out (a plain fade with reduced motion). The root view and the stack's `contentStyle` paint `colors.background`; the status bar contrasts with it.
-- **Fonts:** `@expo-google-fonts/*` weights listed in `FONTS` (`src/lib/fonts.ts`), loaded behind the splash; `--font-sans` / `--font-display` mapped in `global.css` (`@theme`) to the loaded names, one per weight. Never point them at the web stacks in `tokens.css`: native takes a single family name.
-- **Primitives** in `src/components/ui/` mirror web's names and cva variants. `Button` adds a light haptic and a press scale (none with reduced motion). Placeholder text uses `colors.mutedForeground` (`placeholderTextColor` can't take a class). Icons: `lucide-react-native`, colored with `colors.<role>`. Toasts: sonner-native's `Toaster` in the root layout, styled from tokens.
-- **Screen anatomy:** every screen is a `Screen` (`~/components/screen`): safe area (`edges`), `bg-background`, a keyboard-aware scroll with `p-6` content (`className` adds to it, e.g. `gap-8`), or `scroll={false}` for a fixed layout. Any third-party view that takes `className` goes through `withUniwind`.
-- No web-only utilities on native (`hover:`, `focus-visible:`); they compile to nothing.
-
-## Desktop (apps/desktop)
-
-Same tokens and fonts as web (`src/renderer/src/styles/app.css`). The window paints `colors.background` before the renderer loads, so there's no white flash.
+Plain and exact, like a lab notebook. Short sentences, common words, sentence case. Ants are "she". Buttons say what happens ("Race 48 colonies", "Test it", "Publish"). No exclamation marks, no emoji, no marketing words.
 
 ## Don'ts
 
-- ❌ Dark mode in any form: a `.dark` block, `prefers-color-scheme`, a toggle, `useColorScheme`, `nativeTheme`, `dark:` classes.
-- ❌ Colors outside `tokens.css`: palette classes, hex literals, a second `:root`.
-- ❌ Shipping the placeholder: neutral greys, the system font, `/` as a stack showcase.
-- ❌ `tailwind.config.{js,ts}`: Tailwind v4, tokens live in `packages/tokens`.
-- ❌ `asChild` or `@radix-ui/*` on shadcn components; use Base UI's `render` prop or `buttonVariants()`.
-- ❌ Hand-made icons, splash images or favicons: edit the mark and run `bun run brand`.
-- ❌ Treating `CardTitle` as a heading element: it's a `<div>` (matters for a11y and test selectors).
-- ❌ `import './x.css'` from a component: the stylesheet is a `<link>` in `index.html`; `@import` new CSS from `app.css`, or the dev build paints unstyled first.
+- ❌ Dark mode in any form.
+- ❌ Colours outside `tokens.css`, palette classes, a second accent colour.
+- ❌ Cards with shadows, gradients as decoration, rounded-xl anything.
+- ❌ An eyebrow, tagline, subtitle, hint or caption.
+- ❌ `tailwind.config.*`, `asChild`, `@radix-ui/*`, `import './x.css'` from a component.
+- ❌ Hand-made icons or favicons: edit the mark and run `bun run brand`.

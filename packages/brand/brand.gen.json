@@ -1,5 +1,5 @@
 {
-  "inputHash": "62fd6ac09ed114c24ba429f55fa7673feb20b84653f279c05a9aa1f72bdaf1a3",
+  "inputHash": "1973989252e515a56f23720e2dcffa5f60ecf55f74c5be89b44b25f277527107",
   "icon": {
     "background": "#e9eae6",
     "mark": "#ce0e1a"
@@ -10,9 +10,9 @@
     "markWidth": 120
   },
   "outputs": {
-    "apps/web/public/favicon.svg": "1da49d2c90f94fdf8afbad97873b8cce48947857a13f1ff09be1f659107f58e3",
-    "apps/web/public/apple-touch-icon.png": "40c23911fbc0dcc9e11553b16f04a72662899db670973d9f68f8c55550addf19",
-    "apps/web/public/icon-192.png": "0cc0d0172ac6afbc93789cb3e4f9eee9be5a487a735df834bcac0ad1a41ec69d",
-    "apps/web/public/icon-512.png": "0cf4c73c7e62b8e2f82a7a47780df73bf85cbd7916e9fe03c4ff99325706b3e4"
+    "apps/web/public/favicon.svg": "55e029c723a62d2decfc45b8979d74e00e150114fd659e345f56d91c189c7342",
+    "apps/web/public/apple-touch-icon.png": "f59313d3f206141f67ec5a9b9a3a9929123b503bfdeb1d546d8c0de036ab7418",
+    "apps/web/public/icon-192.png": "38462c95ad16a2fcfba663e773932e6670199751d8b675d550542136c0102560",
+    "apps/web/public/icon-512.png": "53257bd2a247d963a542cb42accdfe6a74e60e6a1d5bf7364a8e59c93dfb2f3a"
   }
 }

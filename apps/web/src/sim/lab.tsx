@@ -195,18 +195,18 @@ function RacePanel({
   const stats: RaceStats = useSyncExternalStore(race.subscribe, race.snapshot, race.snapshot)
   const out = stats.done - stats.delivered
   return (
-    <aside className="flex flex-col gap-5 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
+    <aside className="flex flex-col gap-4 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
       <div>
         <h1 className="font-display text-2xl leading-tight font-bold">{title}</h1>
-        <p className="tabular mt-1 font-display text-6xl leading-none font-extrabold">
+        <p className="tabular mt-1 font-display text-5xl leading-none font-extrabold">
           {stats.delivered}
           <span className="text-foreground/30">/{stats.total}</span>
         </p>
       </div>
 
-      <dl className="border-y">
+      <dl className="grid grid-cols-2 gap-x-5 border-t">
         <Row label="Delivered" value={`${stats.delivered} of ${stats.total}`} />
-        {out > 0 && <Row label={`Called off at ${clock(RACE_CAP)}`} value={out} />}
+        <Row label="Called off" value={out} />
         <Row label="Typical" value={stats.median === null ? '' : clock(stats.median)} />
         <Row label="Fastest" value={stats.best === null ? '' : clock(stats.best)} />
         <Row label="Speed" value={`${Math.round(stats.pace).toLocaleString('en-US')}×`} />
@@ -286,7 +286,7 @@ function Overlay({ session, snap }: { session: Session; snap: Snapshot }) {
 
 function Row({ label, value, dot }: { label: string; value: string | number; dot?: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b py-1.5 last:border-b-0">
+    <div className="flex items-baseline justify-between gap-3 border-b py-1.5">
       <dt className="flex items-center gap-2 text-sm text-muted-foreground">
         {dot && <span className={cn('size-2 rounded-full', dot)} />}
         {label}
@@ -350,12 +350,12 @@ function Panel({
 }) {
   const live = session !== null
   return (
-    <aside className="flex flex-col gap-5 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
+    <aside className="flex flex-col gap-4 border-t p-5 lg:overflow-y-auto lg:border-t-0 lg:border-l">
       <div>
         <h1 className="font-display text-2xl leading-tight font-bold">{title}</h1>
         <p
           className={cn(
-            'tabular mt-1 font-display text-6xl leading-none font-extrabold',
+            'tabular mt-1 font-display text-5xl leading-none font-extrabold',
             snap.warming && 'text-foreground/30'
           )}>
           {clock(snap.time)}
@@ -389,7 +389,7 @@ function Panel({
         className="w-full"
       />
 
-      <dl className="border-y">
+      <dl className="grid grid-cols-2 gap-x-5 border-t">
         <Row label="Carrying" value={snap.carriers} />
         <Row label="Pulling" value={snap.pullers} />
         <Row label="Lifting" value={snap.lifters} dot="bg-lifter" />
@@ -447,30 +447,28 @@ function Panel({
       </div>
 
       {tally && tally.antRuns + tally.handRuns > 0 && (
-        <dl className="border-y">
-          <Row label="Colonies delivered" value={tally.antRuns.toLocaleString('en-US')} />
-          {tally.antMedian !== null && (
-            <Row label="Typical colony" value={clock(tally.antMedian)} />
-          )}
-          {tally.antBest !== null && <Row label="Fastest colony" value={clock(tally.antBest)} />}
-          {tally.handBest !== null && <Row label="Fastest by hand" value={clock(tally.handBest)} />}
+        <dl className="grid grid-cols-2 gap-x-5 border-t">
+          <Row label="All colonies" value={tally.antRuns.toLocaleString('en-US')} />
+          <Row label="Typical" value={tally.antMedian === null ? '' : clock(tally.antMedian)} />
+          <Row label="Fastest" value={tally.antBest === null ? '' : clock(tally.antBest)} />
+          <Row label="By hand" value={tally.handBest === null ? '' : clock(tally.handBest)} />
         </dl>
       )}
 
-      <Button
-        variant="outline"
-        disabled={!live}
-        onClick={onRace}
-        className="mt-auto border-input bg-transparent shadow-none">
-        {raceLabel}
-      </Button>
-      <div className="flex gap-2">
+      <div className="mt-auto flex flex-wrap gap-2">
         <Button
           variant="outline"
           disabled={!live}
           onClick={() => session?.restart()}
           className="flex-1 border-input bg-transparent shadow-none">
           New colony
+        </Button>
+        <Button
+          variant="outline"
+          disabled={!live}
+          onClick={onRace}
+          className="flex-1 border-input bg-transparent shadow-none">
+          {raceLabel}
         </Button>
         {snap.changed && (
           <Button
