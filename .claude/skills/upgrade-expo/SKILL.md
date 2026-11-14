@@ -1,6 +1,6 @@
 ---
 name: upgrade-expo
-description: Upgrade Expo (a patch of the current SDK, or a new SDK major) in a sal-starter repo or any fork, inside the 3-day minimumReleaseAge. Use when Sal says "upgrade expo", "bump the SDK", "move to SDK <n>", "expo is out of date", when `bun run doctor` fails its version check, or when the template has moved to a new SDK and a fork that no longer syncs needs the same. Runs `bun run upgrade:expo`, then verifies on Limrun.
+description: Upgrade Expo (a patch of the current SDK, or a new SDK major) in a ant-thing repo or any fork, inside the 3-day minimumReleaseAge. Use when Sal says "upgrade expo", "bump the SDK", "move to SDK <n>", "expo is out of date", when `bun run doctor` fails its version check, or when the template has moved to a new SDK and a fork that no longer syncs needs the same. Runs `bun run upgrade:expo`, then verifies on Limrun.
 ---
 
 # Upgrade Expo

@@ -32,7 +32,6 @@
   "dependencies": {
     "@app/tokens": "workspace:*",
     "@base-ui/react": "catalog:",
-    "@better-auth/expo": "catalog:",
     "@prisma/adapter-pg": "catalog:",
     "@prisma/client": "catalog:",
     "@tanstack/react-query": "catalog:",
@@ -40,7 +39,6 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
-    "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cn": "catalog:",
     "compression": "^1.8.2",

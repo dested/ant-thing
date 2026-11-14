@@ -10,25 +10,21 @@ import {
   createStaticHandler,
   createStaticRouter,
 } from 'react-router'
-import { auth, type Session } from '../server/auth'
 import { env } from '../server/env'
 import { appRouter } from '../server/router'
 import { contextFor } from '../server/trpc'
 import App from './App'
 import { serializeSsrState } from './lib/ssr-state'
 import { routes } from './app/routes'
-import { clientsContext, sessionContext } from './lib/router-context'
+import { clientsContext } from './lib/router-context'
 
 export async function render(req: express.Request): Promise<{
   html: string
   status: number
-  session: Session | null
   /** superjson-serialized React Query cache, ready to inline as a JS expression */
   ssrState: string
 }> {
   const fetchRequest = expressToFetch(req)
-
-  const session = await auth.api.getSession({ headers: fetchRequest.headers })
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { staleTime: 60_000 } },
@@ -36,13 +32,12 @@ export async function render(req: express.Request): Promise<{
 
   const trpcServer = createTRPCOptionsProxy({
     router: appRouter,
-    ctx: contextFor(session),
+    ctx: contextFor(),
     queryClient,
   })
 
   const requestContext = new RouterContextProvider()
   requestContext.set(clientsContext, { queryClient, trpc: trpcServer })
-  requestContext.set(sessionContext, () => Promise.resolve(session))
 
   const { query, dataRoutes } = createStaticHandler(routes)
   const routerContext = await query(fetchRequest, { requestContext })
@@ -75,7 +70,6 @@ export async function render(req: express.Request): Promise<{
   return {
     html,
     status: routerContext.statusCode,
-    session,
     ssrState: serializeSsrState({ dehydratedState: dehydrate(queryClient) }),
   }
 }

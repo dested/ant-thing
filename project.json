@@ -1,20 +1,18 @@
 {
-  "name": "sal-starter",
-  "displayName": "Sal Starter",
-  "scheme": "salstarter",
-  "bundleId": "com.dested.salstarter",
-  "appId": "com.dested.salstarter",
-  "surfaces": ["web", "mobile", "desktop"],
-  "apiPort": 4780,
-  "metroPort": 4781,
-  "desktopPort": 4782,
-  "db": "sal_starter",
+  "name": "ant-thing",
+  "displayName": "Ant Thing",
+  "scheme": "antthing",
+  "bundleId": "com.dested.antthing",
+  "appId": "com.dested.antthing",
+  "surfaces": [
+    "web"
+  ],
+  "apiPort": 7268,
+  "metroPort": 7269,
+  "desktopPort": 7270,
+  "db": "ant_thing",
   "easProjectId": null,
   "easOwner": "quickgame",
   "appleTeamId": null,
-  "template": true,
-  "look": {
-    "scheme": "light",
-    "direction": "template placeholder: init resets this to null, the kickoff sets the real look"
-  }
+  "look": null
 }

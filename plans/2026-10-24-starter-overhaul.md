@@ -1,4 +1,4 @@
-# sal-starter overhaul: what the forks taught us, and the plan
+# ant-thing overhaul: what the forks taught us, and the plan
 
 - **Date:** 2026-10-24
 - **Status:** active

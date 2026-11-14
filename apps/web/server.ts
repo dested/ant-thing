@@ -1,12 +1,10 @@
 import { createExpressMiddleware } from '@trpc/server/adapters/express'
-import { toNodeHandler } from 'better-auth/node'
 import express from 'express'
 import * as fs from 'node:fs'
 import * as http from 'node:http'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isAssetPath } from './server/asset-path'
-import { auth } from './server/auth'
 import { env } from './server/env'
 import { formatError, log, requestLogger, startupBanner } from './server/logger'
 import { prisma } from './server/prisma'
@@ -39,10 +37,6 @@ async function createServer() {
       res.status(503).json({ status: 'error', error: 'database unreachable' })
     }
   })
-
-  // better-auth handler — mounted BEFORE express.json() (better-auth reads
-  // the raw body itself).
-  app.all('/api/auth/*splat', toNodeHandler(auth))
 
   app.use(
     '/api/trpc',
@@ -149,7 +143,7 @@ async function createServer() {
       port: PORT,
       isProd,
       databaseUrl: env.DATABASE_URL,
-      routes: ['/', '/sign-in', '/sign-up', '/dashboard', '/healthz', '/api/trpc', '/api/auth'],
+      routes: ['/', '/dashboard', '/healthz', '/api/trpc'],
     })
   })
 }

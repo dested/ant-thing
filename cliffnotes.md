@@ -1,4 +1,4 @@
-# sal-starter — CliffNotes
+# ant-thing — CliffNotes
 
 > Living map of the project. Read this before any coding session.
 > Last updated: 2026-10-25. Deep briefing → `CLAUDE.md` · human quickstart → `README.md`.
@@ -11,8 +11,8 @@ An SSR React starter template, a Bun workspace with an optional Expo app (iOS + 
 
 ## Quick Reference
 
-- **Ports:** API **4780** (web + `/api/*`), Metro **4781** (mobile only), desktop renderer **4782** (desktop dev only), Playwright e2e **4783** (apiPort + 3). All come from `project.json` (`apiPort`, `metroPort`, `desktopPort`); `init` picks a per-name base. Never 3000/3001/5173/5174/8000/8080/4200/5000
-- **Dev:** `bun run dev` (root) → web on http://localhost:4780 (HMR shares the port) + Metro on 4781 if `apps/mobile` exists + the Electron window (renderer on 4782) if `apps/desktop` exists. `bun run dev web|mobile|desktop` for one
+- **Ports:** API **7268** (web + `/api/*`), Metro **7269** (mobile only), desktop renderer **7270** (desktop dev only), Playwright e2e **7271** (apiPort + 3). All come from `project.json` (`apiPort`, `metroPort`, `desktopPort`); `init` picks a per-name base. Never 3000/3001/5173/5174/8000/8080/4200/5000
+- **Dev:** `bun run dev` (root) → web on http://localhost:7268 (HMR shares the port) + Metro on 7269 if `apps/mobile` exists + the Electron window (renderer on 7270) if `apps/desktop` exists. `bun run dev web|mobile|desktop` for one
 - **New project:** `git clone … <name> && git remote rename origin upstream && bun install && bun run init <name> [flags]` (flags: CLAUDE.md → Start a fork), then (web) `createdb <name>` → `bun run db:migrate` → `bun run dev`, then **the kickoff** (`.claude/skills/kickoff`, `/kickoff`) and **`bun run demo:drop`** before any feature: until `look` is set and the demo is gone, dev shows a "Kickoff pending" ribbon, `bun run test` fails and `bun run build` fails
 - **Look:** ONE theme, no dark mode, no toggle. Values in `packages/tokens/tokens.css` → `bun run tokens` (regenerates `colors.json`) → `bun run brand` → `bun run test`
 - **Brand:** `packages/brand/mark.svg` + `brand.json` → `bun run brand` → app icons, splash, favicon, manifest, desktop .ico (committed; `brand.test.ts` fails while stale)
@@ -25,7 +25,7 @@ An SSR React starter template, a Bun workspace with an optional Expo app (iOS + 
 - **Type-check:** `bun run typecheck` (`tsc --noEmit`, TypeScript 7, root `scripts/` + `recipes/` + every workspace; `strict` + `noUncheckedIndexedAccess`)
 - **Unit tests:** `bun run test` (`bun:test` in every workspace that has a `test` script)
 - **Build:** `bun run build` → `apps/web/dist/client` + `dist/server`
-- **E2E:** `bun run test:e2e` (Playwright; isolated DB `sal_starter_test` on the `.env` `DATABASE_URL` server, created + migrated + truncated by global-setup; :4783; committed screenshots)
+- **E2E:** `bun run test:e2e` (Playwright; isolated DB `ant_thing_test` on the `.env` `DATABASE_URL` server, created + migrated + truncated by global-setup; :7271; committed screenshots)
 - **Migrations:** `bun run db:migrate --name <what>` (dev) · `bun run db:migrate:create` (hand-written SQL) · `bun run db:migrate:sql -o <file>` (agent shells, where `migrate dev` refuses; CLAUDE.md → Add a DB table) · `bun run db:deploy` (prod/CI). Never `bunx prisma` (npm latest is the Prisma 8 RC)
 - **Ship a mobile fix (OTA):** in `apps/mobile`: `bun run ota:preview --message "…"` → test on a preview build → `bun run ota:promote` (republishes that exact update to production). Hotfix straight to prod: `bun run ota:prod --message "…"`. Check `eas fingerprint:compare --build-id <id>` before the first update to a build. Run `eas` only in `apps/mobile`, never at the root
 - **Mobile checks:** `bun run --cwd apps/mobile doctor` · `bun run --cwd apps/mobile test` · `bunx expo export --platform ios` (in `apps/mobile`) · `bun run --cwd apps/mobile fingerprint` (= Home's `fingerprint:` row)
@@ -331,7 +331,7 @@ Add `e2e/*.spec.ts`; screenshot only stable views; `bun run test:e2e:update` to 
 - **Mobile ↔ web contract is `import type` only** (CLAUDE.md rule #17); tokens come from `@app/tokens`, brand colors from `@app/brand`. Identity only in `project.json` (#22). No hand edits to `ios/`/`android/` (#18), no custom Metro config (#21).
 - **WSL mirrored networking drops connects to a closed `127.0.0.1` port** instead of refusing them, so a "is it up?" probe on `localhost` hangs ~2 min (the TCP SYN timeout). Playwright's `webServer.url` probes `[::1]` for that reason; do the same in any readiness check.
 - **The e2e readiness probe is a static file** (`/robots.txt`), not `/healthz`: Playwright starts the server before global-setup creates a new fork's `_test` DB, so a DB ping never passes on a first run.
-- **`init` renames every `sal-starter` / `sal_starter` / `Sal Starter` string** in tracked text files, so never compare against the template's name to detect "am I the template". Key off `project.json` `template: true` (init drops it).
+- **`init` renames every `ant-thing` / `ant_thing` / `Ant Thing` string** in tracked text files, so never compare against the template's name to detect "am I the template". Key off `project.json` `template: true` (init drops it).
 - **JSX demo markers must be blocks** (`{/* demo:start */}` … `{/* demo:end */}`): a same-line `{/* demo */}` after an element leaves a stray text node on React Native.
 - **`Stack.Protected` needs `redirectTo`** on SDK 58: the default falls back to the first open group's path, and `(auth)` has no index, so a signed-out launch at `/` landed on "Unmatched Route".
 - **`require<T>()` and `EXPO_PUBLIC_*` typing lives in the committed `apps/mobile/expo-types.d.ts`.** Metro's `expo-env.d.ts` is gitignored and only appears after Metro runs, so a fresh clone or fork typechecked red without it.
@@ -343,7 +343,7 @@ Add `e2e/*.spec.ts`; screenshot only stable views; `bun run test:e2e:update` to 
 - **Run `bun run db:generate` after schema edits** (auto-runs on `bun install`).
 - **superjson everywhere** — any new tRPC link needs `transformer: superjson`; SSR state goes through `ssr-state.ts`, never raw `JSON.stringify`. Format Dates deterministically (UTC / fixed `timeZone`) or SSR/hydration markup diverges.
 - **Migrations, never `db push`** — and review generated SQL: Prisma can emit `DROP INDEX` for hand-made expression indexes.
-- **Port** — `PORT` env (default `project.json` apiPort, 4780); Metro = apiPort + 1, desktop renderer + 2, e2e + 3; never 3000/3001/5173/5174/8000/8080/4200/5000.
+- **Port** — `PORT` env (default `project.json` apiPort, 7268); Metro = apiPort + 1, desktop renderer + 2, e2e + 3; never 3000/3001/5173/5174/8000/8080/4200/5000.
 - **Types** — `strict` + `noUncheckedIndexedAccess`; no `any`, no `as` casts to paper over mismatches; loader context values come from typed `createContext` keys.
 - **Stylesheet is a `<link>` in `index.html`** — never `import` CSS from a component (Vite injects it after the module graph loads → unstyled flash in dev). `@import` new CSS from `app.css`.
 - **One theme, never dark mode** — no `.dark`, `prefers-color-scheme`, toggle, `useColorScheme` or `nativeTheme` anywhere; `dark:` classes compile to nothing. After any `tokens.css` edit run `bun run tokens` (and `bun run brand`) or the tests fail.

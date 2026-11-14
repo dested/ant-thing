@@ -4,7 +4,7 @@ import { E2E_DATABASE_URL, withDatabase } from './db'
 
 // Create the isolated test database if it's missing, bring it up to the
 // committed migrations (the same `migrate deploy` production runs), then wipe
-// it so sign-up uses a fresh fixed user and screenshots are byte-for-byte
+// it so screenshots are byte-for-byte
 // reproducible. Runs once per `playwright test`.
 export default async function globalSetup() {
   // TRUNCATE below is destructive — refuse anything that isn't a *_test database.

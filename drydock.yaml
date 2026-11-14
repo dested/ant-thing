@@ -1,7 +1,7 @@
-name: sal-starter # init → project.json name; also the Postgres db/user and <name>.dested.com
+name: ant-thing # init → project.json name; also the Postgres db/user and <name>.dested.com
 kind: ssr
 runtime: bun
-port: 4780 # container port; the task def injects it as PORT, which server/env.ts already reads
+port: 7268 # container port; the task def injects it as PORT, which server/env.ts already reads
 size: s
 rootDir: apps/web
 workspace: '@app/web' # Bun workspace member: Drydock installs from the root bun.lock with --filter

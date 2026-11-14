@@ -1,6 +1,6 @@
 ---
 name: kickoff
-description: The first job in every new sal-starter fork, before any feature work. Decides the product's look with Sal (3 directions, or wing it; ONE scheme, never a dark mode or toggle), then builds it everywhere (tokens, fonts, primitives, the real `/`, icon, splash, favicon, meta, ui.md) and sets project.json `look`. Use when project.json `look` is null, the "Kickoff pending" ribbon or banner line shows, `bun run test` fails on "the look is set", or Sal says kickoff, "set the look", "make it pretty", "design pass".
+description: The first job in every new ant-thing fork, before any feature work. Decides the product's look with Sal (3 directions, or wing it; ONE scheme, never a dark mode or toggle), then builds it everywhere (tokens, fonts, primitives, the real `/`, icon, splash, favicon, meta, ui.md) and sets project.json `look`. Use when project.json `look` is null, the "Kickoff pending" ribbon or banner line shows, `bun run test` fails on "the look is set", or Sal says kickoff, "set the look", "make it pretty", "design pass".
 ---
 
 # Kickoff

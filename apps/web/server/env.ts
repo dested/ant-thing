@@ -31,21 +31,11 @@ const optionalKeys = {
   // EXAMPLE_API_KEY: optionalSecret,
 }
 
-const schema = z
-  .object({
-    PORT: z.coerce.number().int().min(1).max(65535).default(DEFAULT_PORT),
-    DATABASE_URL: z.url(),
-    BETTER_AUTH_SECRET: z
-      .string()
-      .min(32, { error: 'BETTER_AUTH_SECRET must be at least 32 chars' }),
-    BETTER_AUTH_URL: z.url().optional(),
-    /** Who may sign up: emails and `@domain` entries. Blank = anyone. Admins always may. */
-    SIGNUP_ALLOWLIST: emailList,
-    /** Emails whose sessions pass adminProcedure (ctx.isAdmin). */
-    ADMIN_EMAILS: emailList,
-    ...optionalKeys,
-  })
-  .transform((e) => ({ ...e, BETTER_AUTH_URL: e.BETTER_AUTH_URL ?? `http://localhost:${e.PORT}` }))
+const schema = z.object({
+  PORT: z.coerce.number().int().min(1).max(65535).default(DEFAULT_PORT),
+  DATABASE_URL: z.url(),
+  ...optionalKeys,
+})
 
 export const env = schema.parse(process.env)
 

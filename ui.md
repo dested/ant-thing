@@ -1,4 +1,4 @@
-# sal-starter — UI / Visual Language
+# ant-thing — UI / Visual Language
 
 > Source of truth for how this looks and feels. Follow it for anything visual, and keep it current as part of finishing a UI change.
 > **Template until the kickoff** (`.claude/skills/kickoff`): it fills in every `<…>`, replaces the placeholder values, and deletes this line. Fork-owned: `bun run sync` keeps this file as the fork wrote it.

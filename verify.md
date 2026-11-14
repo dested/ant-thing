@@ -1,4 +1,4 @@
-# sal-starter — Verify
+# ant-thing — Verify
 
 > How to check a change. `[cheap]` checks run after every change; `[medium]` ones need the local Postgres or a scratch clone; `[heavy — ask first]` ones need a device, a billed service or a remote machine.
 
@@ -26,11 +26,11 @@ bun run tokens && bun run brand && bun run test   # colors.json and every brand 
 Web boots without a database for pages that don't query:
 
 ```bash
-bun run dev web             # → http://localhost:4780
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4780/                       # 200
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4780/api/auth/get-session   # 200
-curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4780/manifest.webmanifest   # 200
-curl -s http://localhost:4780/ | grep -o '<meta name="\(color-scheme\|theme-color\)"[^>]*>'  # look.scheme + colors.background
+bun run dev web             # → http://localhost:7268
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:7268/                       # 200
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:7268/api/auth/get-session   # 200
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:7268/manifest.webmanifest   # 200
+curl -s http://localhost:7268/ | grep -o '<meta name="\(color-scheme\|theme-color\)"[^>]*>'  # look.scheme + colors.background
 ```
 
 The look (after the kickoff): `bx` screenshots of `/`, `/sign-in` and the signed-in page at desktop width and 390px. No "Kickoff pending" ribbon, no neutral placeholder left, no template demo bar.
@@ -54,15 +54,15 @@ In the introspect output: `ios.bundleIdentifier` and `android.package` end in `.
 With `bun run dev` running (API + Metro):
 
 ```bash
-curl -s http://localhost:4781/status            # packager-status:running
-curl -s -H "expo-platform: ios" http://localhost:4781/ -o /dev/null -w "%{http_code}\n"   # 200 manifest
+curl -s http://localhost:7269/status            # packager-status:running
+curl -s -H "expo-platform: ios" http://localhost:7269/ -o /dev/null -w "%{http_code}\n"   # 200 manifest
 ```
 
 ## Desktop `[cheap]`
 
 ```bash
 bun run --cwd apps/desktop build     # out/main, out/preload/index.cjs (~1 KB), out/renderer
-bun run dev desktop                  # renderer on 4782 + the window (brand icon); ping, echo and ticking subscription all work
+bun run dev desktop                  # renderer on 7270 + the window (brand icon); ping, echo and ticking subscription all work
 bun run release                      # release/win-unpacked/<name>.exe launches and shows the same (linux-unpacked in WSL)
 ```
 
@@ -81,7 +81,7 @@ bun run test                    # the recipe's own test (jobs needs the test DB:
 
 ## Fork recipes `[medium]`
 
-Never in the template itself. Each in a fresh scratch clone: `git clone /w/code/sal-starter <dir> && cd <dir> && git remote rename origin upstream && bun install`. Subagents can't run `git clone` (the agent-guard hook blocks it), so the lead runs these.
+Never in the template itself. Each in a fresh scratch clone: `git clone /w/code/ant-thing <dir> && cd <dir> && git remote rename origin upstream && bun install`. Subagents can't run `git clone` (the agent-guard hook blocks it), so the lead runs these.
 
 - **Web-only:** `bun run init demo-web` → commit "init: web-only", no `apps/mobile`, no `upgrade:expo` script, `bun.lock` without `expo` entries, `project.json` without `template`, `look: null`. typecheck green; `bun run build` FAILS ("The template Post demo is still here…"); `bun run test` fails on the demo test and the kickoff test only.
 - **Demo gate and drop:** in that fork `bun run demo:drop --check` exits 1; `bun run demo:drop` deletes the demo files, strips the markers, writes `apps/web/prisma/migrations/<ts>_drop_post_demo/migration.sql` and prints the next steps. Then `bun run db:deploy`, typecheck, build and tests green apart from the kickoff test, and `bun run test:e2e` green against a fresh `<name>_test` DB that global-setup creates (the first run must not hang on the `/robots.txt` probe).
@@ -94,11 +94,11 @@ Never in the template itself. Each in a fresh scratch clone: `git clone /w/code/
 
 ## E2E `[medium]`
 
-Needs the root `.env` `DATABASE_URL` to reach Postgres; the suite uses the same server with the database `sal_starter_test`, creating it on first run. A run takes seconds.
+Needs the root `.env` `DATABASE_URL` to reach Postgres; the suite uses the same server with the database `ant_thing_test`, creating it on first run. A run takes seconds.
 
 ```bash
-bun run test:e2e            # Playwright on :4783 (apiPort + 3) against sal_starter_test: smoke, auth-next (?next=), demo
-curl -s http://localhost:4780/healthz          # {"status":"ok",...} with bun run dev up
+bun run test:e2e            # Playwright on :7271 (apiPort + 3) against ant_thing_test: smoke, auth-next (?next=), demo
+curl -s http://localhost:7268/healthz          # {"status":"ok",...} with bun run dev up
 ```
 
 Screenshot diffs after an intentional UI change: `bun run test:e2e:update`, then review and commit the PNGs.

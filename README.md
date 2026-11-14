@@ -1,8 +1,8 @@
-# sal-starter
+# ant-thing
 
 An SSR React starter wired with a current, type-safe stack, plus an optional Expo app (iOS + Android) and an optional Electron desktop app that talk to the same server. Clone it, init it, ship.
 
-> Already have a project cloned from an older sal-starter? A workspace fork pulls template changes with `bun run sync`; see [`MIGRATION.md`](./MIGRATION.md) for what a sync past the 2026-10-25 overhaul needs, the app-breaking fixes for old single-package clones, and the move to this monorepo layout.
+> Already have a project cloned from an older ant-thing? A workspace fork pulls template changes with `bun run sync`; see [`MIGRATION.md`](./MIGRATION.md) for what a sync past the 2026-10-25 overhaul needs, the app-breaking fixes for old single-package clones, and the move to this monorepo layout.
 
 | layer              | choice                                                                                                |
 | ------------------ | ----------------------------------------------------------------------------------------------------- |
@@ -44,7 +44,7 @@ Then, before building anything:
 
 `init` renames everything, writes `project.json` (the project's identity: name, scheme, bundle id, surfaces, ports, db, EAS owner), picks per-project ports and writes a fresh `.env` (web only). Surfaces you didn't ask for are deleted in their own commit ("init: web-only", "init: desktop-only", …); `bun run add:mobile` / `add:desktop` bring one back any time. With `--mobile` it creates the EAS project (`--no-eas` skips it, `--dry-run-eas` prints the commands) and drops the template's native-example package (`--native-example` keeps it). `--no-auth` removes better-auth, sign-in/up and the auth tables. `--port <n>` picks the API port yourself (Metro gets n + 1, the desktop renderer n + 2, e2e n + 3). `--fresh-git` wipes history instead, which also cuts you off from `sync`.
 
-**Ports:** every project gets its own distinct, uncommon set and records it in `cliffnotes.md`. Never 3000/3001/5173/5174/8000/8080/4200/5000. The template uses 4780 (API), 4781 (Metro), 4782 (desktop) and 4783 (e2e).
+**Ports:** every project gets its own distinct, uncommon set and records it in `cliffnotes.md`. Never 3000/3001/5173/5174/8000/8080/4200/5000. The template uses 7268 (API), 7269 (Metro), 7270 (desktop) and 7271 (e2e).
 
 **Pull template improvements later:**
 
@@ -61,7 +61,7 @@ All run from the repo root.
 
 | script                                   | what it does                                                                   |
 | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `bun run dev`                            | web (HMR + SSR on 4780) + Metro on 4781 + the desktop window, whichever exist  |
+| `bun run dev`                            | web (HMR + SSR on 7268) + Metro on 7269 + the desktop window, whichever exist  |
 | `bun run dev web` / `mobile` / `desktop` | just one of them                                                               |
 | `bun run init <name>`                    | rename the template, write `project.json` + `.env` (flags above)               |
 | `bun run sync`                           | merge `upstream/main` into this fork without committing                        |
@@ -130,7 +130,7 @@ packages/native-example/ shared Expo module + config plugin (the template's nati
 
 The app runs as a **development build** (a dev client), never Expo Go.
 
-- **Daily** (Windows/WSL): editor, Postgres, `bun run dev` (API on 4780 + Metro on 4781). JS changes hot-reload.
+- **Daily** (Windows/WSL): editor, Postgres, `bun run dev` (API on 7268 + Metro on 7269). JS changes hot-reload.
 - **Run and test:** Limrun, a cloud Xcode sandbox and iOS simulator (`lim xcode build`, then a simulator tunnelled to Metro and the API).
 - **Your iPhone:** expo-wsl-ios (`npx expo-wsl-ios run` in `apps/mobile`), built and signed locally.
 - **Distribution:** EAS (`build:preview`, `build:prod`, `submit:prod`, the Android equivalents, `ota:*`).
@@ -148,7 +148,7 @@ When do you need a new build? When the native fingerprint changes: run `bun run 
 
 ## Testing
 
-Playwright e2e lives in `apps/web/e2e/`. `bun run test:e2e` boots the app on port 4783 (`project.json` apiPort + 3) against an **isolated test database** (`sal_starter_test`, from `project.json` db, on the server and credentials of your `.env` `DATABASE_URL`), creates it if missing, applies the committed migrations and truncates every table, and runs the specs: smoke (home, sign-up → dashboard → sign-out, the 404 page, a `Date` surviving SSR), the `?next=` round trip, and the Post demo flow. Visual baselines are committed under `e2e/__screenshots__/`; update them with `bun run test:e2e:update`.
+Playwright e2e lives in `apps/web/e2e/`. `bun run test:e2e` boots the app on port 7271 (`project.json` apiPort + 3) against an **isolated test database** (`ant_thing_test`, from `project.json` db, on the server and credentials of your `.env` `DATABASE_URL`), creates it if missing, applies the committed migrations and truncates every table, and runs the specs: smoke (home, sign-up → dashboard → sign-out, the 404 page, a `Date` surviving SSR), the `?next=` round trip, and the Post demo flow. Visual baselines are committed under `e2e/__screenshots__/`; update them with `bun run test:e2e:update`.
 
 ```bash
 bun run test:e2e                                 # or E2E_DATABASE_URL=postgres://…/x_test bun run test:e2e

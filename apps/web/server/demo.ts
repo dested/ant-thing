@@ -2,7 +2,7 @@
 // while this file exists, a fork's build and tests fail). `bun run demo:drop`
 // deletes it with the rest of the demo; copy the pattern, not the feature.
 import { z } from 'zod'
-import { router, publicProcedure, protectedProcedure } from './trpc'
+import { router, publicProcedure } from './trpc'
 import { prisma } from './prisma'
 
 export const demoRouter = router({
@@ -10,7 +10,6 @@ export const demoRouter = router({
     const rows = await prisma.post.findMany({
       take: 50,
       orderBy: { createdAt: 'desc' },
-      include: { author: { select: { name: true } } },
     })
     // `createdAt` stays a Date — superjson carries it over the wire and
     // through SSR hydration. Format it deterministically (UTC) when rendering
@@ -20,19 +19,14 @@ export const demoRouter = router({
       title: p.title,
       content: p.content,
       createdAt: p.createdAt,
-      authorName: p.author?.name ?? null,
     }))
   }),
-  create: protectedProcedure
+  create: publicProcedure
     .input(
       z.object({
         title: z.string().min(1).max(200),
         content: z.string().min(1).max(2000),
       })
     )
-    .mutation(async ({ ctx, input }) => {
-      return prisma.post.create({
-        data: { ...input, authorId: ctx.session.user.id },
-      })
-    }),
+    .mutation(({ input }) => prisma.post.create({ data: input })),
 })

@@ -78,9 +78,7 @@ export function PostsDemo() {
             <Card key={p.id}>
               <CardHeader>
                 <CardTitle>{p.title}</CardTitle>
-                <CardDescription>
-                  by {p.authorName ?? 'unknown'} · {p.createdAt.toISOString().slice(0, 10)}
-                </CardDescription>
+                <CardDescription>{p.createdAt.toISOString().slice(0, 10)}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm">{p.content}</p>

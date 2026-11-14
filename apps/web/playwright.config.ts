@@ -49,8 +49,6 @@ export default defineConfig({
       PORT: String(PORT),
       NODE_ENV: 'development',
       DATABASE_URL: E2E_DATABASE_URL,
-      BETTER_AUTH_SECRET: 'e2e-secret-at-least-32-characters-long!!',
-      BETTER_AUTH_URL: baseURL,
     },
   },
 })
