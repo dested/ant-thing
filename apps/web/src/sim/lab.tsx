@@ -9,7 +9,7 @@ import { cn } from '~/lib/utils'
 import { RaceBoard } from '~/race/board'
 import { Keyhole } from '~/space/keyhole'
 import { useSpace } from '~/space/use-space'
-import { coreCount, Race, raceSize, type RaceStats } from '~/race/race'
+import { Race, raceSize, useCores, type RaceStats } from '~/race/race'
 import { clock } from './clock'
 import type { ViewOptions } from './renderer'
 import { RATES, WARM_SECONDS, type Finish, type Mode, type Session, type Snapshot } from './session'
@@ -65,7 +65,7 @@ export function Lab({
   const [session, setSession] = useState<Session | null>(null)
   const [race, setRace] = useState<Race | null>(null)
   const snap = useSnapshot(session)
-  const cores = coreCount()
+  const cores = useCores()
   const space = useSpace(puzzle, snap.view.planner || snap.view.keyhole)
   useEffect(() => session?.setRoute(space ? space.route : null), [session, space])
 
@@ -130,7 +130,7 @@ export function Lab({
           snap={snap}
           title={title}
           tally={tally}
-          raceLabel={`Race ${raceSize(cores)} colonies`}
+          raceLabel={cores > 0 ? `Race ${raceSize(cores)} colonies` : 'Race colonies'}
           onRace={startRace}>
           {children}
         </Panel>

@@ -1,6 +1,6 @@
 # Ant Movers: sim + editor + gallery
 
-Status: active
+Status: done
 Board: #730 · Host: ant.dested.com (Drydock, repo dested/ant-thing, public MIT) · Dev: http://localhost:7268
 
 ## Ask (Sal, 2026-11-13)
@@ -51,7 +51,7 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
 7. [x] Server: Puzzle + Attempt tables, publish/list/get/report/attempt, admin token router, rate limits
 8. [x] Gallery + puzzle pages (/p/:id), stats
 9. [x] Science section with live trials (workers) and charts from real runs
-10. [ ] Deploy: gh repo (public), Drydock create with domain ant.dested.com, verify TLS
+10. [x] Deploy: gh repo (public), Drydock create with domain ant.dested.com, verify TLS
 11. [x] Kit: cliffnotes, ui.md, decisions, updates, verify, QA flows, board close-out
 
 ## Ledger
@@ -79,3 +79,5 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
 - 2026-11-14: where a newcomer thinks home is (96 colonies each, 30 min cap): scent alone 54, the page's mix 62, the straight
   line alone 82; newcomers who know nothing 19. Leading for 20 s beats 10 s (77 vs 62) and 40 s is bad (24). The straight line
   wins on this layout because the slits sit on it; the page says so instead of hiding it.
+- 2026-11-14: public repo dested/ant-thing pushed; Drydock project `ant-thing` created with domain ant.dested.com (zone dested.com),
+  `ADMIN_TOKEN` set in its environment (the value is in the gitignored `.private/admin-token.txt`). First deploy from the wiring commit.

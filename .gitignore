@@ -33,3 +33,6 @@ apps/web/server/generated
 apps/desktop/out
 release
 data/.private
+
+# Local key material (never committed)
+.private/

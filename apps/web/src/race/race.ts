@@ -1,4 +1,5 @@
 import type { Puzzle } from '@app/sim'
+import { useSyncExternalStore } from 'react'
 import { raceEventSchema, type RaceJob, type Rules } from './race.worker'
 
 export type { Rules }
@@ -36,6 +37,14 @@ export interface RaceStats {
 export function coreCount(): number {
   const cores = typeof navigator === 'undefined' ? 4 : navigator.hardwareConcurrency || 4
   return Math.max(1, Math.min(16, cores - 1))
+}
+
+const never = (): (() => void) => () => {}
+const unknown = (): number => 0
+
+/** `coreCount()` for rendering: 0 on the server and during hydration, the real count after. */
+export function useCores(): number {
+  return useSyncExternalStore(never, coreCount, unknown)
 }
 
 /** A race sized so it lasts long enough to watch and not long enough to leave. */
