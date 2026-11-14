@@ -1,0 +1,13 @@
+{
+  "puzzle": "piano-movers",
+  "seeds": 0,
+  "cap": 1800,
+  "conformity": [],
+  "ants": [],
+  "informedTime": [],
+  "knowledge": {
+    "noCompass": { "value": 0, "runs": 0, "delivered": 0, "times": [] },
+    "noScent": { "value": 0, "runs": 0, "delivered": 0, "times": [] },
+    "neither": { "value": 0, "runs": 0, "delivered": 0, "times": [] }
+  }
+}

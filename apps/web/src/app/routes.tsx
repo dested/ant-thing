@@ -1,6 +1,7 @@
 import { data, type LoaderFunctionArgs, type RouteObject } from 'react-router'
 import { clientsContext } from '~/lib/router-context'
 import type { Draft } from '~/editor/draft'
+import { AdminPage } from './admin'
 import { BuildPage } from './build'
 import { RouteErrorBoundary } from './error-boundary'
 import { HomePage } from './home'
@@ -56,6 +57,7 @@ export const routes: RouteObject[] = [
       { path: 'puzzles', Component: PuzzlesPage, loader: puzzlesLoader },
       { path: 'p/:id', Component: PuzzlePage, loader: puzzleLoader },
       { path: 'build', Component: BuildPage, loader: buildLoader },
+      { path: 'admin', Component: AdminPage },
     ],
   },
 ]

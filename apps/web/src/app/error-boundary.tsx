@@ -9,9 +9,9 @@ export function RouteErrorBoundary() {
   const error = useRouteError()
   const isNotFound = isRouteErrorResponse(error) && error.status === 404
 
-  const title = isNotFound ? '404' : 'Something went wrong'
+  const title = isNotFound ? 'Nothing here' : 'Something went wrong'
   const message = isNotFound
-    ? "This page doesn't exist."
+    ? 'There is no page at this address.'
     : isRouteErrorResponse(error)
       ? `${error.status} ${error.statusText}`
       : error instanceof Error
@@ -20,15 +20,13 @@ export function RouteErrorBoundary() {
 
   return (
     <>
-      <header className="border-b">
-        <nav className="mx-auto flex max-w-5xl items-center px-6 py-4">
-          <Link to="/" className="font-semibold">
-            ant-thing
-          </Link>
-        </nav>
+      <header className="flex h-12 items-center border-b px-5">
+        <Link to="/" className="font-display text-lg font-extrabold">
+          Ant Movers
+        </Link>
       </header>
-      <main className="mx-auto flex max-w-5xl flex-col items-start gap-4 px-6 py-16">
-        <h1 className="text-5xl font-bold tracking-tight">{title}</h1>
+      <main className="mx-auto flex max-w-3xl flex-col items-start gap-4 px-5 py-16">
+        <h1 className="font-display text-5xl leading-none font-extrabold">{title}</h1>
         <p className="text-muted-foreground">{message}</p>
         {import.meta.env.DEV && error instanceof Error && error.stack && (
           <pre className="max-w-full overflow-auto rounded-md bg-muted p-4 text-xs text-muted-foreground">
@@ -36,7 +34,7 @@ export function RouteErrorBoundary() {
           </pre>
         )}
         <Link to="/" className={buttonVariants()}>
-          Back home
+          Back to the ants
         </Link>
       </main>
     </>
