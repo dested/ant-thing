@@ -1,5 +1,5 @@
 import { Fields, UNKNOWN } from './field'
-import { collide, distToPoly, emptyQuad, placeRect, segmentPoly, wrap, type Contact, type Poly } from './geom'
+import { collide, distToPoly, emptyQuad, hyp, placeRect, segmentPoly, wrap, type Contact, type Poly } from './geom'
 import { DEFAULT_PARAMS, type Params } from './params'
 import { NEST_R, WALL_T, type Puzzle } from './puzzle'
 import { Rng } from './rng'
@@ -62,6 +62,8 @@ export interface Ant {
   bumps: number
   /** Seconds left of ignoring every scent after giving up. */
   lost: number
+  /** The turn her last sniff chose: -1, 0, 1, or NO_SCENT. */
+  steer: number
   /** Tick offset that staggers the expensive checks. */
   phase: number
 }
@@ -88,6 +90,7 @@ export interface Stats {
 }
 
 const GRAB = 6
+const NO_SCENT = 2
 /** How close an ant's middle gets to a wall. */
 const STANDOFF = 4
 /** An ant pressed against a wall who covers less than this in GIVE_UP seconds is stuck. */
@@ -192,6 +195,7 @@ export class World {
         still: 0,
         bumps: 0,
         lost: 0,
+        steer: NO_SCENT,
         phase: i % 60,
       })
     }
@@ -239,7 +243,7 @@ export class World {
     for (let i = 0; i < this.ants.length; i++) {
       const ant = this.ants[i]
       if (!ant || ant.state === NEST || ant.state === CARRY) continue
-      const d = Math.hypot(ant.x - this.x, ant.y - this.y)
+      const d = hyp(ant.x - this.x, ant.y - this.y)
       if (d < best) {
         best = d
         pick = i
@@ -330,7 +334,7 @@ export class World {
     const nest = this.puzzle.nest
     let px = nest.x - ant.x
     let py = nest.y - ant.y
-    const pl = Math.hypot(px, py) || 1
+    const pl = hyp(px, py) || 1
     px /= pl
     py /= pl
     if (P.scent && this.fields.downhill(this.fields.home, ant.x, ant.y, 22, this.tmp)) {
@@ -377,13 +381,13 @@ export class World {
         strength = P.playerStrength
         informed++
       } else if (ant.informed > 0) {
-        const stalled = Math.hypot(vsx, vsy) < P.carrySpeed * 0.08
+        const stalled = hyp(vsx, vsy) < P.carrySpeed * 0.08
         ant.informed -= stalled ? DT * P.stallForget : DT
         informed++
         if ((this.tick + ant.phase) % 20 === 0) ant.homeDir = this.senseHome(ant)
         ant.dir += wrap(ant.homeDir + ant.err - ant.dir) * Math.min(1, 8 * DT)
       } else {
-        const sp = Math.hypot(vsx, vsy)
+        const sp = hyp(vsx, vsy)
         const wgt = Math.min(1, sp / P.vRef)
         if (wgt > 0.02) ant.dir += P.conformity * wgt * Math.sin(Math.atan2(vsy, vsx) - ant.dir) * DT
         ant.dir = wrap(ant.dir + noise * this.rng.gauss())
@@ -422,7 +426,7 @@ export class World {
       const ry = s * drag.bx + c * drag.by
       let ex = drag.tx - (this.x + rx)
       let ey = drag.ty - (this.y + ry)
-      const el = Math.hypot(ex, ey)
+      const el = hyp(ex, ey)
       if (el > 22) {
         ex *= 22 / el
         ey *= 22 / el
@@ -561,7 +565,7 @@ export class World {
       const oy = pulling ? Math.sin(ant.dir) : st.ny
       const nx = st.x + ox * (ANT_LEN * 0.55)
       const ny = st.y + oy * (ANT_LEN * 0.55)
-      ant.gait += Math.hypot(nx - ant.x, ny - ant.y)
+      ant.gait += hyp(nx - ant.x, ny - ant.y)
       ant.x = nx
       ant.y = ny
       ant.h = Math.atan2(-oy, -ox)
@@ -577,7 +581,7 @@ export class World {
       }
       const rx = st.x - this.x
       const ry = st.y - this.y
-      const sp = Math.hypot(this.vx - this.w * ry, this.vy + this.w * rx)
+      const sp = hyp(this.vx - this.w * ry, this.vy + this.w * rx)
       const rate = (sp < stall && !this.frozen ? P.stallLetGo : 1) / P.holdTime
       if (this.rng.next() < rate * DT) this.letGo(ant, false)
     }
@@ -650,20 +654,28 @@ export class World {
     return pick
   }
 
-  /** Steer by three antennae: turn toward whichever side smells closest. NaN when there is nothing to smell. */
-  private follow(grid: Float32Array, ant: Ant, h: number): number {
+  /** What one antenna smells, `SENSE_D` ahead at an angle. */
+  private smell(grid: Float32Array, ant: Ant, ang: number): number {
     const f = this.fields
-    const sample = (ang: number): number => {
-      const px = ant.x + Math.cos(ang) * SENSE_D
-      const py = ant.y + Math.sin(ang) * SENSE_D
-      return f.hidden(ant.x, ant.y, px, py) ? UNKNOWN : f.read(grid, px, py)
+    const px = ant.x + Math.cos(ang) * SENSE_D
+    const py = ant.y + Math.sin(ang) * SENSE_D
+    return f.hidden(ant.x, ant.y, px, py) ? UNKNOWN : f.read(grid, px, py)
+  }
+
+  /**
+   * Steer by three antennae: turn toward whichever side smells closest. NaN when there is nothing to smell.
+   * She sniffs every third step and holds the turn in between.
+   */
+  private follow(grid: Float32Array, ant: Ant, h: number): number {
+    if ((this.tick + ant.phase) % 3 === 0) {
+      const c = this.smell(grid, ant, h)
+      const l = this.smell(grid, ant, h - SENSE_A)
+      const r = this.smell(grid, ant, h + SENSE_A)
+      if (c >= UNKNOWN && l >= UNKNOWN && r >= UNKNOWN) ant.steer = NO_SCENT
+      else if (c <= l && c <= r) ant.steer = 0
+      else ant.steer = l < r ? -1 : 1
     }
-    const c = sample(h)
-    const l = sample(h - SENSE_A)
-    const r = sample(h + SENSE_A)
-    if (c >= UNKNOWN && l >= UNKNOWN && r >= UNKNOWN) return Number.NaN
-    if (c <= l && c <= r) return h
-    return l < r ? h - TURN * DT : h + TURN * DT
+    return ant.steer === NO_SCENT ? Number.NaN : h + ant.steer * TURN * DT
   }
 
   /** Every free ant takes a step. */
@@ -713,7 +725,7 @@ export class World {
       // Getting nowhere (a corner, a wall between her and what she smells): turn around and wander a while.
       ant.still += DT
       if (ant.still >= GIVE_UP) {
-        if (ant.bumps > 20 && Math.hypot(ant.x - ant.ax, ant.y - ant.ay) < GIVE_UP_DIST) {
+        if (ant.bumps > 20 && hyp(ant.x - ant.ax, ant.y - ant.ay) < GIVE_UP_DIST) {
           ant.lost = this.rng.range(2, 4)
           ant.cool = Math.max(ant.cool, ant.lost)
           ant.goal = -1
@@ -775,7 +787,7 @@ export class World {
           f.mark(f.food, ant.x, ant.y, ant.trip)
           if (ant.trip > 45) ant.marks = false
         }
-        const nd = Math.hypot(nest.x - ant.x, nest.y - ant.y)
+        const nd = hyp(nest.x - ant.x, nest.y - ant.y)
         if (nd < NEST_R * 0.5) {
           ant.state = NEST
           ant.cool = this.rng.range(0.5, 2.5)
@@ -798,7 +810,7 @@ export class World {
     ant.free += DT
     const dx = p.tx - ant.x
     const dy = p.ty - ant.y
-    const d = Math.hypot(dx, dy)
+    const d = hyp(dx, dy)
     if (p.bite && this.grabOpen) {
       const site = this.nearestSite(ant.x, ant.y, 16)
       if (site >= 0) {
@@ -830,7 +842,7 @@ export class World {
       ant.bumps++
       let gx = f.dist(x + 2, y) - f.dist(x - 2, y)
       let gy = f.dist(x, y + 2) - f.dist(x, y - 2)
-      const gl = Math.hypot(gx, gy)
+      const gl = hyp(gx, gy)
       if (gl > 1e-6) {
         gx /= gl
         gy /= gl
@@ -842,7 +854,7 @@ export class World {
         h += Math.PI * this.rng.range(0.5, 1.5)
       }
     }
-    ant.gait += Math.hypot(x - ant.x, y - ant.y)
+    ant.gait += hyp(x - ant.x, y - ant.y)
     ant.x = x
     ant.y = y
     ant.h = wrap(h)

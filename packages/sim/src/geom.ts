@@ -46,7 +46,7 @@ export function finishPoly(p: Poly): void {
     if (!a || !b || !m) continue
     const ex = b.x - a.x
     const ey = b.y - a.y
-    const len = Math.hypot(ex, ey) || 1
+    const len = hyp(ex, ey) || 1
     m.x = (sign * ey) / len
     m.y = (-sign * ex) / len
   }
@@ -60,7 +60,7 @@ export function finishPoly(p: Poly): void {
 export function segmentPoly(x1: number, y1: number, x2: number, y2: number, t: number): Poly {
   let dx = x2 - x1
   let dy = y2 - y1
-  const len = Math.hypot(dx, dy)
+  const len = hyp(dx, dy)
   if (len < 1e-6) {
     dx = 1
     dy = 0
@@ -191,7 +191,7 @@ export function collide(a: Poly, b: Poly, margin: number, out: Contact[]): void 
   // Clip the incident edge to the reference face's side planes.
   const tx = r2.x - r1.x
   const ty = r2.y - r1.y
-  const tl = Math.hypot(tx, ty) || 1
+  const tl = hyp(tx, ty) || 1
   const ux = tx / tl
   const uy = ty / tl
   let ax = i1.x
@@ -227,7 +227,7 @@ export function collide(a: Poly, b: Poly, margin: number, out: Contact[]): void 
   const sepA = n.x * (ax - r1.x) + n.y * (ay - r1.y)
   if (sepA <= margin) out.push({ x: ax, y: ay, nx: n.x * sign, ny: n.y * sign, sep: sepA })
   const sepB = n.x * (bx - r1.x) + n.y * (by - r1.y)
-  if (sepB <= margin && Math.hypot(bx - ax, by - ay) > 0.01) {
+  if (sepB <= margin && hyp(bx - ax, by - ay) > 0.01) {
     out.push({ x: bx, y: by, nx: n.x * sign, ny: n.y * sign, sep: sepB })
   }
 }
@@ -248,12 +248,17 @@ export function distToPoly(p: Poly, x: number, y: number): number {
     const l2 = ex * ex + ey * ey || 1
     let t = ((x - a.x) * ex + (y - a.y) * ey) / l2
     t = t < 0 ? 0 : t > 1 ? 1 : t
-    const d = Math.hypot(x - (a.x + ex * t), y - (a.y + ey * t))
+    const d = hyp(x - (a.x + ex * t), y - (a.y + ey * t))
     if (d < best) best = d
   }
   return inside ? 0 : best
 }
 
+
+/** Length of (x, y). Math.hypot is several times slower in every engine, and this is the sim's hottest call. */
+export function hyp(x: number, y: number): number {
+  return Math.sqrt(x * x + y * y)
+}
 /** Wrap an angle to (-π, π]. */
 export function wrap(a: number): number {
   while (a > Math.PI) a -= 2 * Math.PI

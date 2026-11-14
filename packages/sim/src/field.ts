@@ -1,3 +1,4 @@
+import { hyp } from './geom'
 import { WALL_T, type Wall } from './puzzle'
 
 /** Scent values are times in seconds; this means "no scent here". */
@@ -85,7 +86,7 @@ export class Fields {
     for (const [x1, y1, x2, y2] of walls) {
       let dx = x2 - x1
       let dy = y2 - y1
-      const len = Math.hypot(dx, dy)
+      const len = hyp(dx, dy)
       if (len < 1e-6) {
         dx = 1
         dy = 0
@@ -109,7 +110,7 @@ export class Fields {
           const across = Math.abs(-px * dy + py * dx) - half
           const d =
             along > 0 || across > 0
-              ? Math.hypot(Math.max(along, 0), Math.max(across, 0))
+              ? hyp(Math.max(along, 0), Math.max(across, 0))
               : Math.max(along, across)
           const k = j * sw + i
           if (d < (sdf[k] ?? FAR)) sdf[k] = d
@@ -213,7 +214,7 @@ export class Fields {
       gy += cy * drop
       found++
     }
-    const len = Math.hypot(gx, gy)
+    const len = hyp(gx, gy)
     if (found < 2 || len < 1e-4) return false
     out.x = gx / len
     out.y = gy / len
