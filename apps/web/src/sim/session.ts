@@ -8,10 +8,12 @@ export const RATES = [1, 4, 16, 64, 0] as const
 export type Rate = (typeof RATES)[number]
 
 /** Seconds of trail-laying before the clock starts, and how fast it plays. */
-const WARM_SECONDS = 45
+export const WARM_SECONDS = 45
 const WARM_RATE = 24
 /** Milliseconds of stepping allowed in one frame before the sim falls behind instead of the page. */
 const BUDGET = 11
+/** The same at Max speed, where the picture drops to half the frames so the sim gets most of the core. */
+const MAX_BUDGET = 28
 const MIN_ZOOM_FACTOR = 0.6
 const MAX_ZOOM = 9
 
@@ -213,6 +215,12 @@ export class Session {
     return this.mode !== 'ant' && !this.rulesChanged()
   }
 
+  /** What a headless copy of this run needs: the puzzle as it stands and the rules that are off default. */
+  setup(): { puzzle: Puzzle; rules: { conformity: number; informedTime: number; scent: boolean } } {
+    const { conformity, informedTime, scent } = this.params
+    return { puzzle: this.puzzle, rules: { conformity, informedTime, scent } }
+  }
+
   /** Start over. A new colony unless a seed is given. */
   restart(seed?: number): void {
     this.seed = seed ?? randomSeed()
@@ -390,7 +398,7 @@ export class Session {
     }
     const sizes = new ResizeObserver(resize)
     sizes.observe(canvas)
-    const seen = new IntersectionObserver(entries => {
+    const seen = new IntersectionObserver((entries) => {
       for (const entry of entries) this.onscreen = entry.isIntersecting
     })
     seen.observe(canvas)
@@ -480,7 +488,8 @@ export class Session {
       this.touches.delete(e.pointerId)
       this.pinch = 0
       if (this.world.drag) this.world.drag = null
-      if (this.mode === 'ant' && e.type === 'pointerup' && e.pointerType !== 'touch') this.toggleBite()
+      if (this.mode === 'ant' && e.type === 'pointerup' && e.pointerType !== 'touch')
+        this.toggleBite()
       if (this.panning) {
         this.panning = false
         this.publish()
@@ -498,7 +507,8 @@ export class Session {
     const key = (e: KeyboardEvent): void => {
       if (e.code !== 'Space' || this.mode !== 'ant') return
       const target = e.target
-      if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName)) return
+      if (target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))
+        return
       e.preventDefault()
       if (!e.repeat) this.toggleBite()
     }
@@ -536,7 +546,9 @@ export class Session {
 
   private middle(): Touch {
     const [a, b] = [...this.touches.values()]
-    return a && b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : { x: this.width / 2, y: this.height / 2 }
+    return a && b
+      ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+      : { x: this.width / 2, y: this.height / 2 }
   }
 
   private frame = (now: number): void => {
@@ -550,6 +562,7 @@ export class Session {
       // Rate 0 is "max": ask for more than any machine can do and let the frame budget cap it.
       this.acc += elapsed * (warming ? WARM_RATE : this.rate || 4000)
       const start = performance.now()
+      const budget = this.rate === 0 && !warming ? MAX_BUDGET : BUDGET
       let steps = 0
       while (this.acc >= DT) {
         this.acc -= DT
@@ -571,7 +584,7 @@ export class Session {
           this.acc = 0
           break
         }
-        if ((steps & 3) === 0 && performance.now() - start > BUDGET) {
+        if ((steps & 3) === 0 && performance.now() - start > budget) {
           this.acc = 0
           break
         }

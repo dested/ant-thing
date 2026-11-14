@@ -11,12 +11,14 @@ export function Layout() {
           {[
             { to: '/puzzles', label: 'Puzzles' },
             { to: '/build', label: 'Build' },
-          ].map(item => (
+          ].map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                isActive ? 'underline underline-offset-4' : 'hover:underline hover:underline-offset-4'
+                isActive
+                  ? 'underline underline-offset-4'
+                  : 'hover:underline hover:underline-offset-4'
               }>
               {item.label}
             </NavLink>

@@ -34,7 +34,10 @@ async function puzzleLoader({ context, params }: LoaderFunctionArgs): Promise<{ 
 }
 
 // /build?from=<id> opens the editor on a copy of that puzzle. Without it the editor uses its own draft.
-async function buildLoader({ context, request }: LoaderFunctionArgs): Promise<{ from: Draft | null }> {
+async function buildLoader({
+  context,
+  request,
+}: LoaderFunctionArgs): Promise<{ from: Draft | null }> {
   const id = new URL(request.url).searchParams.get('from')
   if (!id) return { from: null }
   const { queryClient, trpc } = context.get(clientsContext)

@@ -26,7 +26,8 @@ export function PuzzleLab({ id }: { id: string }) {
   const { data } = useQuery(trpc.puzzles.get.queryOptions({ id }))
   const record = useMutation(
     trpc.puzzles.record.mutationOptions({
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.puzzles.get.queryKey({ id }) }),
+      onSuccess: () =>
+        queryClient.invalidateQueries({ queryKey: trpc.puzzles.get.queryKey({ id }) }),
     })
   )
   const report = useMutation(trpc.puzzles.report.mutationOptions())
@@ -35,13 +36,20 @@ export function PuzzleLab({ id }: { id: string }) {
   if (!puzzle) return null
 
   const onFinish = (finish: Finish): void => {
-    if (finish.standard) record.mutate({ id, kind: finish.kind, seconds: finish.seconds, seed: finish.seed })
+    if (finish.standard)
+      record.mutate({ id, kind: finish.kind, seconds: finish.seconds, seed: finish.seed })
   }
 
   return (
-    <Lab puzzle={puzzle} title={builtIn?.title ?? data?.title ?? ''} tally={data ?? undefined} onFinish={onFinish}>
+    <Lab
+      puzzle={puzzle}
+      title={builtIn?.title ?? data?.title ?? ''}
+      tally={data ?? undefined}
+      onFinish={onFinish}>
       <div className="flex items-center justify-between gap-4 text-sm">
-        <Link to={`/build?from=${encodeURIComponent(id)}`} className="font-medium underline underline-offset-4">
+        <Link
+          to={`/build?from=${encodeURIComponent(id)}`}
+          className="font-medium underline underline-offset-4">
           Edit this puzzle
         </Link>
         {!builtIn &&

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { Segmented } from '~/components/ui/segmented'
 import { useTRPC } from '~/lib/trpc'
-import { clock } from '~/sim/lab'
+import { clock } from '~/sim/clock'
 import { PuzzleThumb } from '~/sim/thumb'
 
 type Sort = 'played' | 'new'
@@ -27,12 +27,13 @@ function Tile({ card }: { card: Card }) {
     <li>
       <Link to={card.id === 'piano-movers' ? '/' : `/p/${card.id}`} className="group block">
         <PuzzleThumb puzzle={card.puzzle} className="aspect-[3/2] w-full" />
-        <span className="font-display mt-2 block text-xl leading-tight font-bold group-hover:underline">
+        <span className="mt-2 block font-display text-xl leading-tight font-bold group-hover:underline">
           {card.title}
         </span>
         {card.antRuns > 0 && (
           <span className="tabular block text-sm text-muted-foreground">
-            {card.antRuns.toLocaleString('en-US')} {card.antRuns === 1 ? 'colony' : 'colonies'} delivered
+            {card.antRuns.toLocaleString('en-US')} {card.antRuns === 1 ? 'colony' : 'colonies'}{' '}
+            delivered
             {card.antBest !== null && `, fastest ${clock(card.antBest)}`}
           </span>
         )}
@@ -54,9 +55,13 @@ export function PuzzlesPage() {
           Build your own
         </Link>
       </div>
-      {isError && <p className="mt-6 text-destructive">The puzzles couldn’t be loaded. Reload the page to try again.</p>}
+      {isError && (
+        <p className="mt-6 text-destructive">
+          The puzzles couldn’t be loaded. Reload the page to try again.
+        </p>
+      )}
       <ul className="mt-6 grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-        {data?.presets.map(card => (
+        {data?.presets.map((card) => (
           <Tile key={card.id} card={card} />
         ))}
       </ul>
@@ -74,7 +79,7 @@ export function PuzzlesPage() {
         </p>
       ) : (
         <ul className="mt-6 grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-          {data?.community.map(card => (
+          {data?.community.map((card) => (
             <Tile key={card.id} card={card} />
           ))}
         </ul>

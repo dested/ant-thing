@@ -80,7 +80,14 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, width, height)
     const z = cam.zoom
-    ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (width / 2 - cam.x * z), dpr * (height / 2 - cam.y * z))
+    ctx.setTransform(
+      dpr * z,
+      0,
+      0,
+      dpr * z,
+      dpr * (width / 2 - cam.x * z),
+      dpr * (height / 2 - cam.y * z)
+    )
 
     this.floor(ctx, p)
     if (view.traffic) this.exposure(ctx, world)
@@ -110,7 +117,14 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, width, height)
     const z = cam.zoom
-    ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (width / 2 - cam.x * z), dpr * (height / 2 - cam.y * z))
+    ctx.setTransform(
+      dpr * z,
+      0,
+      0,
+      dpr * z,
+      dpr * (width / 2 - cam.x * z),
+      dpr * (height / 2 - cam.y * z)
+    )
     this.floor(ctx, puzzle)
     this.nest(ctx, puzzle, z)
     this.walls(
@@ -261,7 +275,7 @@ export class Renderer {
       ctx.beginPath()
       for (const a of world.ants) {
         if (a.state !== CARRY || a.role !== PULLER) continue
-        if ((a.informed > 0) !== (pass === 1)) continue
+        if (a.informed > 0 !== (pass === 1)) continue
         const st = world.sites[a.site]
         if (!st) continue
         const c = Math.cos(a.dir)
@@ -345,7 +359,14 @@ export class Renderer {
     ctx.fillStyle = colors.card
     ctx.fillRect(0, 0, p.w, p.h)
     // Uneven lab lighting: brighter in the middle, like the footage.
-    const g = ctx.createRadialGradient(p.w * 0.45, p.h * 0.4, p.h * 0.1, p.w * 0.5, p.h * 0.5, p.w * 0.75)
+    const g = ctx.createRadialGradient(
+      p.w * 0.45,
+      p.h * 0.4,
+      p.h * 0.1,
+      p.w * 0.5,
+      p.h * 0.5,
+      p.w * 0.75
+    )
     g.addColorStop(0, 'rgba(255,255,255,0.28)')
     g.addColorStop(1, 'rgba(0,0,0,0.07)')
     ctx.fillStyle = g
@@ -490,7 +511,8 @@ export class Renderer {
     // The pieces overlap, so anything translucent is filled as one path: the union, painted once.
     const union = (inset: number): void => {
       ctx.beginPath()
-      for (const r of rects) ctx.rect(r.x0 + inset, r.y0 + inset, r.x1 - r.x0 - inset * 2, r.y1 - r.y0 - inset * 2)
+      for (const r of rects)
+        ctx.rect(r.x0 + inset, r.y0 + inset, r.x1 - r.x0 - inset * 2, r.y1 - r.y0 - inset * 2)
     }
     ctx.save()
     ctx.translate(x + 2.5, y + 3.5)
@@ -517,7 +539,13 @@ export class Renderer {
     ctx.restore()
   }
 
-  private ants(ctx: CanvasRenderingContext2D, world: World, z: number, roles: boolean, playerIndex: number): void {
+  private ants(
+    ctx: CanvasRenderingContext2D,
+    world: World,
+    z: number,
+    roles: boolean,
+    playerIndex: number
+  ): void {
     const ants = world.ants
     const detailed = ANT_LEN * z >= 9
     ctx.lineCap = 'round'
