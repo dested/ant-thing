@@ -30,7 +30,7 @@ export function useSolve(puzzle: Puzzle): Solve {
   const latest = useRef(0)
 
   useEffect(() => {
-    setSolve(s => (s.checking ? s : { ...s, checking: true }))
+    setSolve((s) => (s.checking ? s : { ...s, checking: true }))
     const timer = window.setTimeout(() => {
       if (busy.current && worker.current) {
         worker.current.terminate()
@@ -42,7 +42,12 @@ export function useSolve(puzzle: Puzzle): Solve {
           const parsed = replySchema.safeParse(event.data)
           if (!parsed.success || parsed.data.id !== latest.current) return
           busy.current = false
-          setSolve({ checking: false, problem: parsed.data.problem, solvable: parsed.data.solvable, path: parsed.data.path })
+          setSolve({
+            checking: false,
+            problem: parsed.data.problem,
+            solvable: parsed.data.solvable,
+            path: parsed.data.path,
+          })
         })
         worker.current = next
       }

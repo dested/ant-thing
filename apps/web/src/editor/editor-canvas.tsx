@@ -1,4 +1,13 @@
-import { buildShape, LIMITS, NEST_R, segmentPoly, WALL_T, type Puzzle, type Shape, type Wall } from '@app/sim'
+import {
+  buildShape,
+  LIMITS,
+  NEST_R,
+  segmentPoly,
+  WALL_T,
+  type Puzzle,
+  type Shape,
+  type Wall,
+} from '@app/sim'
 import { colors } from '@app/tokens'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { fitZoom, Renderer } from '~/sim/renderer'
@@ -52,7 +61,9 @@ function inLoad(puzzle: Puzzle, shape: Shape, x: number, y: number): boolean {
   const dy = y - puzzle.load.y
   const bx = c * dx + s * dy
   const by = -s * dx + c * dy
-  return shape.rects.some(r => bx >= r.x0 - 3 && bx <= r.x1 + 3 && by >= r.y0 - 3 && by <= r.y1 + 3)
+  return shape.rects.some(
+    (r) => bx >= r.x0 - 3 && bx <= r.x1 + 3 && by >= r.y0 - 3 && by <= r.y1 + 3
+  )
 }
 
 /**
@@ -100,18 +111,7 @@ export function EditorCanvas({
     const cam = { x: puzzle.w / 2, y: puzzle.h / 2, zoom }
     renderer.current.still(ctx, puzzle, shape, cam, size.w, size.h, size.dpr)
 
-    if (path && path.length >= 3) {
-      ctx.fillStyle = `${colors.lifter}14`
-      for (let i = 0; i < path.length; i += 3) {
-        ctx.save()
-        ctx.translate(path[i] ?? 0, path[i + 1] ?? 0)
-        ctx.rotate(path[i + 2] ?? 0)
-        ctx.beginPath()
-        for (const r of shape.rects) ctx.rect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0)
-        ctx.fill()
-        ctx.restore()
-      }
-    }
+    if (path && path.length >= 3) renderer.current.ghosts(ctx, shape, path)
 
     const knob = (x: number, y: number): void => {
       ctx.beginPath()
@@ -178,7 +178,10 @@ export function EditorCanvas({
       }
     }
     const edit = (next: Puzzle): void => live.current.onEdit(next, `drag${stroke.current}`)
-    const withoutWall = (p: Puzzle, index: number): Puzzle => ({ ...p, walls: p.walls.filter((_, i) => i !== index) })
+    const withoutWall = (p: Puzzle, index: number): Puzzle => ({
+      ...p,
+      walls: p.walls.filter((_, i) => i !== index),
+    })
     const withWall = (p: Puzzle, index: number, wall: Wall): Puzzle => ({
       ...p,
       walls: p.walls.map((w, i) => (i === index ? wall : w)),
@@ -274,7 +277,11 @@ export function EditorCanvas({
       } else if (g.kind === 'load') {
         edit({
           ...p,
-          load: { ...p.load, x: clamp(Math.round(pt.x - g.dx), 0, p.w), y: clamp(Math.round(pt.y - g.dy), 0, p.h) },
+          load: {
+            ...p.load,
+            x: clamp(Math.round(pt.x - g.dx), 0, p.w),
+            y: clamp(Math.round(pt.y - g.dy), 0, p.h),
+          },
         })
       } else if (g.kind === 'turn') {
         let a = Math.atan2(pt.y - p.load.y, pt.x - p.load.x)
@@ -283,7 +290,10 @@ export function EditorCanvas({
       } else if (g.kind === 'nest') {
         edit({
           ...p,
-          nest: { x: clamp(Math.round(pt.x - g.dx), 16, p.w - 16), y: clamp(Math.round(pt.y - g.dy), 16, p.h - 16) },
+          nest: {
+            x: clamp(Math.round(pt.x - g.dx), 16, p.w - 16),
+            y: clamp(Math.round(pt.y - g.dy), 16, p.h - 16),
+          },
         })
       } else {
         const hit = wallAt(p, pt.x, pt.y, 4 / pt.zoom)

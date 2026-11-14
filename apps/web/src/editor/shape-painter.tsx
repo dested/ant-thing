@@ -64,7 +64,9 @@ export function ShapePainter({
       if (filling && now.length >= LIMITS.maxCells) return
       const next: Cells = filling
         ? [...now.map(([x, y]): [number, number] => [x, y]), cell]
-        : now.filter(([x, y]) => x !== cell[0] || y !== cell[1]).map(([x, y]): [number, number] => [x, y])
+        : now
+            .filter(([x, y]) => x !== cell[0] || y !== cell[1])
+            .map(([x, y]): [number, number] => [x, y])
       live.current.onChange(next, `shape${stroke.current}`)
     }
     const down = (e: PointerEvent): void => {

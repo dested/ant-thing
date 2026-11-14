@@ -16,7 +16,12 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   const parsed = puzzleSchema.safeParse(data.puzzle)
   let reply: SolveReply
   if (!parsed.success) {
-    reply = { id, problem: 'This puzzle is outside the limits. Undo the last change.', solvable: false, path: [] }
+    reply = {
+      id,
+      problem: 'This puzzle is outside the limits. Undo the last change.',
+      solvable: false,
+      path: [],
+    }
   } else {
     const problem = checkPuzzle(parsed.data)
     if (problem) {

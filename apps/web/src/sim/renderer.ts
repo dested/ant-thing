@@ -36,6 +36,10 @@ export interface ViewOptions {
   forces: boolean
   /** A long exposure of where free ants walk. */
   traffic: boolean
+  /** The shortest way through, found by the search the ants don't have. */
+  planner: boolean
+  /** The map of every pose the load can reach, with this colony's path on it. */
+  keyhole: boolean
 }
 
 function rgb(hex: string): [number, number, number] {
@@ -74,7 +78,8 @@ export class Renderer {
     height: number,
     dpr: number,
     view: ViewOptions,
-    playerIndex: number
+    playerIndex: number,
+    route: readonly number[] | null = null
   ): void {
     const p = world.puzzle
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -94,6 +99,7 @@ export class Renderer {
     else this.trafficFor = null
     if (view.scent) this.scent(ctx, world)
     if (view.trace) this.trace(ctx, world, z)
+    if (view.planner && route) this.ghosts(ctx, world.shape, route)
     this.nest(ctx, p, z)
     this.sealedOff(ctx, world)
     this.walls(ctx, p, world.walls.slice(0, p.walls.length))
@@ -133,6 +139,20 @@ export class Renderer {
       puzzle.walls.map(([x1, y1, x2, y2]) => segmentPoly(x1, y1, x2, y2, WALL_T))
     )
     this.load(ctx, shape, puzzle.load.x, puzzle.load.y, puzzle.load.a)
+  }
+
+  /** A route as faint prints of the load, one per pose (x, y, angle triples). */
+  ghosts(ctx: CanvasRenderingContext2D, shape: Shape, route: readonly number[]): void {
+    ctx.fillStyle = `${colors.lifter}17`
+    for (let i = 0; i + 2 < route.length; i += 3) {
+      ctx.save()
+      ctx.translate(route[i] ?? 0, route[i + 1] ?? 0)
+      ctx.rotate(route[i + 2] ?? 0)
+      ctx.beginPath()
+      for (const r of shape.rects) ctx.rect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0)
+      ctx.fill()
+      ctx.restore()
+    }
   }
 
   /**

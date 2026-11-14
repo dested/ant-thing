@@ -20,7 +20,7 @@ function Segmented<T extends string | number>({
       aria-label={label}
       data-slot="segmented"
       className={cn('inline-flex rounded-md border border-input', className)}>
-      {options.map(option => (
+      {options.map((option) => (
         <button
           key={option.value}
           type="button"

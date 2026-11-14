@@ -78,7 +78,16 @@ export const IDLE: Snapshot = {
   biting: false,
   holding: false,
   zoomed: false,
-  view: { roles: true, scent: false, trace: false, pulls: false, forces: false, traffic: false },
+  view: {
+    roles: true,
+    scent: false,
+    trace: false,
+    pulls: false,
+    forces: false,
+    traffic: false,
+    planner: false,
+    keyhole: false,
+  },
   pace: 0,
   conformity: DEFAULT_PARAMS.conformity,
   informedTime: DEFAULT_PARAMS.informedTime,
@@ -118,6 +127,7 @@ export class Session {
   private standard = true
   private kind: 'ANTS' | 'HANDS' = 'ANTS'
   private reported = false
+  private route: readonly number[] | null = null
 
   private canvas: HTMLCanvasElement | null = null
   private ctx: CanvasRenderingContext2D | null = null
@@ -248,6 +258,11 @@ export class Session {
   setView(key: keyof ViewOptions, on: boolean): void {
     this.view = { ...this.view, [key]: on }
     this.publish()
+  }
+
+  /** The planner's route, for the Planner view. It is only ever drawn. */
+  setRoute(route: readonly number[] | null): void {
+    this.route = route
   }
 
   setAnts(count: number): void {
@@ -613,7 +628,8 @@ export class Session {
       this.height,
       this.dpr,
       this.view,
-      this.world.player?.ant ?? -1
+      this.world.player?.ant ?? -1,
+      this.route
     )
   }
 }

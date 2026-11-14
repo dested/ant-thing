@@ -7,6 +7,8 @@ import { Slider } from '~/components/ui/slider'
 import { Switch } from '~/components/ui/switch'
 import { cn } from '~/lib/utils'
 import { RaceBoard } from '~/race/board'
+import { Keyhole } from '~/space/keyhole'
+import { useSpace } from '~/space/use-space'
 import { coreCount, Race, raceSize, type RaceStats } from '~/race/race'
 import { clock } from './clock'
 import type { ViewOptions } from './renderer'
@@ -26,6 +28,8 @@ const VIEWS: readonly { key: keyof ViewOptions; label: string }[] = [
   { key: 'pulls', label: 'Pulls' },
   { key: 'forces', label: 'Forces' },
   { key: 'traffic', label: 'Traffic' },
+  { key: 'planner', label: 'Planner' },
+  { key: 'keyhole', label: 'Keyhole' },
 ]
 
 const SPEEDS = RATES.map((rate) => ({ value: rate, label: rate === 0 ? 'Max' : `${rate}×` }))
@@ -62,6 +66,8 @@ export function Lab({
   const [race, setRace] = useState<Race | null>(null)
   const snap = useSnapshot(session)
   const cores = coreCount()
+  const space = useSpace(puzzle, snap.view.planner || snap.view.keyhole)
+  useEffect(() => session?.setRoute(space ? space.route : null), [session, space])
 
   // A race is this puzzle, these rules, many seeds at once, one colony per core.
   const startRace = (): void => {
@@ -75,7 +81,7 @@ export function Lab({
       raceSize(cores),
       WARM_SECONDS,
       RACE_CAP,
-      1 + Math.floor(Math.random() * 1e9)
+      1 + Math.floor(Math.random() * 900_000)
     )
     next.start()
     setRace(next)
@@ -108,7 +114,12 @@ export function Lab({
         {race ? (
           <RaceBoard race={race} onPick={endRace} className="absolute inset-0 size-full" />
         ) : (
-          session && <Overlay session={session} snap={snap} />
+          session && (
+            <>
+              <Overlay session={session} snap={snap} />
+              {snap.view.keyhole && <Keyhole session={session} space={space} />}
+            </>
+          )
         )}
       </div>
       {race ? (
@@ -387,7 +398,7 @@ function Panel({
         <Row label="Speed" value={snap.running ? `${Math.round(snap.pace)}×` : 'Paused'} />
       </dl>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-1.5">
         {VIEWS.map((view) => (
           <Chip
             key={view.key}
