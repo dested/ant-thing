@@ -83,7 +83,8 @@ export function Science() {
               moving. The faster it moves, the more she agrees with it. This is the Conformity knob.
             </Rule>
             <Rule name="Scent">
-              Ants walking out from the nest leave marks that say how long ago they left. A newcomer
+              Real ants dab scent on the ground near the load to mark the way home. Here a mark is a
+              number on the floor: how long ago the ant who left it was at the nest. A newcomer
               reads the way home off the marks around the load. Marks don’t carry through walls.
             </Rule>
             <Rule name="Letting go">

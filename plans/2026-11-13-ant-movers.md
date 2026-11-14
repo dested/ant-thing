@@ -44,15 +44,15 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
 
 1. [x] packages/sim: rng, geom (SAT contacts), shape, fields (wall SDF, scent), body solver, world, puzzle schema + presets
 2. [x] bench: headless runs over seeds (solve rate, median), PNG snapshots; tune until the T puzzle solves
-3. [ ] Kickoff look (tokens, fonts, mark, ui.md), `/` = the sim
-4. [ ] Renderer (canvas 2D: arena, walls, load, ants with legs, scent, roles x-ray, trace) + camera
-5. [ ] Controls, rule knobs, be-an-ant mode, move-it-yourself mode
-6. [ ] Editor (walls, load cells, nest, start pose), local draft
-7. [ ] Server: Puzzle + Attempt tables, publish/list/get/report/attempt, admin token router, rate limits
-8. [ ] Gallery + puzzle pages (/p/:id), stats
-9. [ ] Science section with live trials (workers) and charts from real runs
+3. [x] Kickoff look (tokens, fonts, mark, ui.md), `/` = the sim
+4. [x] Renderer (canvas 2D: arena, walls, load, ants with legs, scent, roles x-ray, trace) + camera
+5. [x] Controls, rule knobs, be-an-ant mode, move-it-yourself mode
+6. [x] Editor (walls, load cells, nest, start pose), local draft
+7. [x] Server: Puzzle + Attempt tables, publish/list/get/report/attempt, admin token router, rate limits
+8. [x] Gallery + puzzle pages (/p/:id), stats
+9. [x] Science section with live trials (workers) and charts from real runs
 10. [ ] Deploy: gh repo (public), Drydock create with domain ant.dested.com, verify TLS
-11. [ ] Kit: cliffnotes, ui.md, decisions, updates, verify, QA flows, board close-out
+11. [x] Kit: cliffnotes, ui.md, decisions, updates, verify, QA flows, board close-out
 
 ## Ledger
 
@@ -65,3 +65,14 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
   - Knowledge is gated on a nest trip or 20 s of free walking; stalled pulls drain it 4x (Sudd's realign/reposition).
   - Tools: `bun bench/run.ts` (trials, --log), `bun bench/snap.ts` (PNG contact sheet), `bun bench/route.ts` (planner), `bench/sweep.sh`.
   - Background sweep output: W:\junk\ant-thing\sweep1.txt
+
+- 2026-11-14 (night, Sal asleep): stuck ants fixed (scent and probes no longer leak through walls, wall-pressed ants give up and turn),
+  step 1.5x cheaper, presets sofa / hook / peg forest / maze, limits raised (3000 ants, 2400 x 1600).
+- 2026-11-14: server gallery (publish gated by the planner in a worker thread, run stats, reports, admin token), /puzzles, /p/:id.
+- 2026-11-14: editor on /build (walls, pegs, mazes, shape painter, 12 stock shapes, undo, live solvability, test, publish).
+- 2026-11-14: race (one worker per core, ~1,800x on 16 cores, exact replay of a picked colony), Max speed budget 28 ms.
+- 2026-11-14: Planner and Keyhole views from one configuration-space search in a worker.
+- 2026-11-14: science section with three rerunnable charts; data from bench/science.ts (96 colonies a bar, 30 min cap):
+  conformity 0 / 0.1 → 0%, 0.25 → 52%, 0.5 → 75%, 1 → 65%, 2 → 52%, 3 → 14%, 5 → 0%;
+  ants 25 → 23%, 50 → 46%, 100 → 50%, 200 → 52%, 400 → 65%, 800 → 92%.
+- 2026-11-14: kit written (ui.md, cliffnotes, decisions, verify, README, LICENSE), e2e rewritten, brand mark fixed, social card.

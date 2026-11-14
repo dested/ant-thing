@@ -1,8 +1,9 @@
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { env } from './env'
-import { allow, forget } from './limits'
+import { allow } from './limits'
 import { prisma } from './prisma'
+import { forgetPuzzles } from './puzzles'
 import { publicProcedure, router } from './trpc'
 import { sameSecret } from './who'
 
@@ -31,7 +32,15 @@ export const adminRouter = router({
           orderBy: [{ hidden: 'desc' }, { reports: 'desc' }, { createdAt: 'desc' }],
           skip: input.page * 100,
           take: 100,
-          select: { id: true, title: true, hidden: true, reports: true, antRuns: true, handRuns: true, createdAt: true },
+          select: {
+            id: true,
+            title: true,
+            hidden: true,
+            reports: true,
+            antRuns: true,
+            handRuns: true,
+            createdAt: true,
+          },
         }),
         prisma.puzzle.count({ where: { preset: false } }),
         prisma.run.count(),
@@ -45,16 +54,20 @@ export const adminRouter = router({
       requireAdmin(input.token, ctx.who)
       await prisma.puzzle.update({
         where: { id: input.id },
-        data: input.hidden ? { hidden: true } : { hidden: false, reports: 0, flags: { deleteMany: {} } },
+        data: input.hidden
+          ? { hidden: true }
+          : { hidden: false, reports: 0, flags: { deleteMany: {} } },
       })
-      forget('puzzles:')
+      forgetPuzzles()
       return { ok: true }
     }),
 
-  remove: publicProcedure.input(z.object({ token, id: z.string().min(1).max(40) })).mutation(async ({ input, ctx }) => {
-    requireAdmin(input.token, ctx.who)
-    await prisma.puzzle.deleteMany({ where: { id: input.id, preset: false } })
-    forget('puzzles:')
-    return { ok: true }
-  }),
+  remove: publicProcedure
+    .input(z.object({ token, id: z.string().min(1).max(40) }))
+    .mutation(async ({ input, ctx }) => {
+      requireAdmin(input.token, ctx.who)
+      await prisma.puzzle.deleteMany({ where: { id: input.id, preset: false } })
+      forgetPuzzles()
+      return { ok: true }
+    }),
 })

@@ -9,7 +9,13 @@ interface Bucket {
 const buckets = new Map<string, Bucket>()
 
 /** True when `who` may do `action` again: at most `max` times per `windowMs`. */
-export function allow(who: string, action: string, max: number, windowMs: number, now = Date.now()): boolean {
+export function allow(
+  who: string,
+  action: string,
+  max: number,
+  windowMs: number,
+  now = Date.now()
+): boolean {
   if (buckets.size > 50_000) {
     for (const [key, bucket] of buckets) if (bucket.reset <= now) buckets.delete(key)
   }
@@ -24,18 +30,26 @@ export function allow(who: string, action: string, max: number, windowMs: number
   return true
 }
 
-interface Entry {
-  until: number
-  value: Promise<unknown>
+/** A small in-memory cache of promises, typed by what it holds. */
+export interface Cache<T> {
+  entries: Map<string, { until: number; value: Promise<T> }>
 }
 
-const entries = new Map<string, Entry>()
+export function makeCache<T>(): Cache<T> {
+  return { entries: new Map() }
+}
 
 /** `load()`, remembered for `ttlMs`. Concurrent callers share one load; a failed load is not kept. */
-export function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Promise<T> {
+export function cached<T>(
+  cache: Cache<T>,
+  key: string,
+  ttlMs: number,
+  load: () => Promise<T>
+): Promise<T> {
+  const { entries } = cache
   const now = Date.now()
   const hit = entries.get(key)
-  if (hit && hit.until > now) return hit.value as Promise<T>
+  if (hit && hit.until > now) return hit.value
   if (entries.size > 5_000) {
     for (const [k, e] of entries) if (e.until <= now) entries.delete(k)
   }
@@ -43,9 +57,4 @@ export function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): P
   entries.set(key, { until: now + ttlMs, value })
   value.catch(() => entries.delete(key))
   return value
-}
-
-/** Drop every cached value whose key starts with `prefix`. */
-export function forget(prefix: string): void {
-  for (const key of entries.keys()) if (key.startsWith(prefix)) entries.delete(key)
 }
