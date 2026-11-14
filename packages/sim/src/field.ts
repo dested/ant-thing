@@ -63,7 +63,8 @@ export class Fields {
               const nx = (ii + 0.5) * gres
               const ny = (jj + 0.5) * gres
               const self = di === 0 && dj === 0
-              if (self || (this.dist(nx, ny) > 0 && this.dist((cx + nx) / 2, (cy + ny) / 2) > 0)) mask |= bit
+              if (self || (this.dist(nx, ny) > 0 && this.dist((cx + nx) / 2, (cy + ny) / 2) > 0))
+                mask |= bit
             }
             bit <<= 1
           }
@@ -194,7 +195,13 @@ export class Fields {
    * The direction in which a scent falls fastest around a point, from eight probes.
    * Returns false when there is nothing to smell. Writes the unit vector to `out`.
    */
-  downhill(grid: Float32Array, x: number, y: number, radius: number, out: { x: number; y: number }): boolean {
+  downhill(
+    grid: Float32Array,
+    x: number,
+    y: number,
+    radius: number,
+    out: { x: number; y: number }
+  ): boolean {
     const here = this.read(grid, x, y)
     let gx = 0
     let gy = 0

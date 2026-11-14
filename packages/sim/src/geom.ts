@@ -17,7 +17,14 @@ export interface Poly {
 
 export function emptyQuad(): Poly {
   const mk = (): Vec => ({ x: 0, y: 0 })
-  return { pts: [mk(), mk(), mk(), mk()], nrm: [mk(), mk(), mk(), mk()], minx: 0, miny: 0, maxx: 0, maxy: 0 }
+  return {
+    pts: [mk(), mk(), mk(), mk()],
+    nrm: [mk(), mk(), mk(), mk()],
+    minx: 0,
+    miny: 0,
+    maxx: 0,
+    maxy: 0,
+  }
 }
 
 /** Recompute normals and bounds after the vertices change. */
@@ -157,7 +164,13 @@ function maxSeparation(a: Poly, b: Poly): Sep {
  * Appends at most two contacts to `out`.
  */
 export function collide(a: Poly, b: Poly, margin: number, out: Contact[]): void {
-  if (a.minx - margin > b.maxx || b.minx - margin > a.maxx || a.miny - margin > b.maxy || b.miny - margin > a.maxy) return
+  if (
+    a.minx - margin > b.maxx ||
+    b.minx - margin > a.maxx ||
+    a.miny - margin > b.maxy ||
+    b.miny - margin > a.maxy
+  )
+    return
   const sa = maxSeparation(a, b)
   if (sa.sep > margin) return
   const sb = maxSeparation(b, a)
@@ -253,7 +266,6 @@ export function distToPoly(p: Poly, x: number, y: number): number {
   }
   return inside ? 0 : best
 }
-
 
 /** Length of (x, y). Math.hypot is several times slower in every engine, and this is the sim's hottest call. */
 export function hyp(x: number, y: number): number {

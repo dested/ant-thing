@@ -15,7 +15,8 @@ export class RouteCheckBusy extends Error {}
  * so a burst of publishes can't starve the web server.
  */
 export function checkSolvable(puzzle: Puzzle): Promise<boolean> {
-  if (waiting >= 6) return Promise.reject(new RouteCheckBusy('Too many puzzles are being checked right now.'))
+  if (waiting >= 6)
+    return Promise.reject(new RouteCheckBusy('Too many puzzles are being checked right now.'))
   waiting++
   const run = tail.then(
     () =>
@@ -31,7 +32,7 @@ export function checkSolvable(puzzle: Puzzle): Promise<boolean> {
           const parsed = reply.safeParse(event.data)
           resolve(parsed.success && parsed.data.solvable)
         }
-        worker.onerror = event => {
+        worker.onerror = (event) => {
           clearTimeout(timer)
           worker.terminate()
           reject(new Error(event.message))

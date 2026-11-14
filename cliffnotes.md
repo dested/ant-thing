@@ -15,7 +15,7 @@ A sal-starter fork: web only, `--no-auth`. **Paths below are relative to `apps/w
 - **Dev:** `bun run dev` → http://localhost:7268 (HMR on the same port)
 - **Type-check:** `bun run typecheck` · **Unit tests:** `bun run test` · **Build:** `bun run build` · **E2E:** `bun run test:e2e` (DB `ant_thing_test`; `bun run test:e2e:update` rewrites baselines)
 - **Engine bench (in `packages/sim`):** `bun bench/run.ts --puzzle piano-movers --seeds 32 --max 1800 --jobs 16 [--ants n] [--set conformity=0.5,scent=false] [--json]` · one run with a log: `--seed 3 --log 5` · stuck-ant count: `bun bench/stuck.ts --puzzle maze --seeds 8` · planner: `bun bench/route.ts` · PNG snapshots: `bun bench/snap.ts`
-- **Chart data:** `bun bench/science.ts > ../../apps/web/src/science/data.json` (in `packages/sim`; 23 conditions × 96 colonies, about 25 min on 20 cores)
+- **Chart data:** `bun bench/science.ts > ../../apps/web/src/science/data.json` (in `packages/sim`; 22 conditions × 96 colonies, about 25 min on 20 cores)
 - **Migrations:** `bun run db:migrate --name <what>` (agent shells: CLAUDE.md → Add a DB table) · `bun run db:deploy`. Never `db push`, never `bunx prisma`
 - **Env:** `DATABASE_URL`, `PORT`; optional `ADMIN_TOKEN` (unset = nobody is admin), `PUBLISH_OFF=1` (kill switch for publishing)
 - **Health:** `GET /healthz`
@@ -23,45 +23,45 @@ A sal-starter fork: web only, `--no-auth`. **Paths below are relative to `apps/w
 
 ## File map (concept → path)
 
-| Concept | Path |
-| --- | --- |
-| Engine: the world step, ant brain, load physics | `packages/sim/src/world.ts` |
-| Every behaviour number, with a comment each | `packages/sim/src/params.ts` |
-| Scent grids, wall distance field, line of sight | `packages/sim/src/field.ts` |
-| Geometry: SAT contacts, polygons, `hyp` | `packages/sim/src/geom.ts` |
-| Load shape from grid cells: collision rects, grip sites | `packages/sim/src/shape.ts` |
-| Puzzle schema (zod), `LIMITS`, `PRESETS`, maze generator | `packages/sim/src/puzzle.ts` |
-| The planner the ants don't have: `findRoute`, `mapSpace` | `packages/sim/src/solvable.ts` |
-| `checkPuzzle` (is it well-formed), `fastestPossible` | `packages/sim/src/validate.ts` |
-| Engine tests (determinism, presets solvable, no stuck ants) | `packages/sim/src/sim.test.ts` |
-| Canvas renderer: arena, ants, every view layer, `still()`, `ghosts()` | `src/sim/renderer.ts` |
-| Session: the frame loop, camera, input, modes, rule knobs | `src/sim/session.ts` |
-| Lab UI: stage + panel, race panel, strip plot | `src/sim/lab.tsx`, `src/sim/stage.tsx` |
-| Race: one worker per core, pool, board canvas | `src/race/race.worker.ts`, `race.ts`, `board.tsx` |
-| Headless trials for the charts' "Run it on this machine" | `src/race/trials.ts` |
-| Keyhole + Planner views (configuration space in a worker) | `src/space/space.worker.ts`, `use-space.ts`, `keyhole.tsx` |
-| Editor: canvas, shape painter, draft, live solvability check | `src/editor/*`, page `src/app/build.tsx` |
-| Science section, charts, bench data | `src/science/science.tsx`, `sweep-chart.tsx`, `data.json` |
-| Gallery API: list, get, publish, record, report | `server/puzzles.ts` |
-| Publish-time planner check in a Bun Worker | `server/route-check.ts`, `server/route-worker.ts` |
-| Moderation API (token) + page | `server/admin.ts`, `src/app/admin.tsx` |
-| Anonymous caller id (salted IP hash), rate limits, TTL cache | `server/who.ts`, `server/limits.ts` |
-| Title cleaning and blocklist | `server/titles.ts` |
+| Concept                                                               | Path                                                       |
+| --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Engine: the world step, ant brain, load physics                       | `packages/sim/src/world.ts`                                |
+| Every behaviour number, with a comment each                           | `packages/sim/src/params.ts`                               |
+| Scent grids, wall distance field, line of sight                       | `packages/sim/src/field.ts`                                |
+| Geometry: SAT contacts, polygons, `hyp`                               | `packages/sim/src/geom.ts`                                 |
+| Load shape from grid cells: collision rects, grip sites               | `packages/sim/src/shape.ts`                                |
+| Puzzle schema (zod), `LIMITS`, `PRESETS`, maze generator              | `packages/sim/src/puzzle.ts`                               |
+| The planner the ants don't have: `findRoute`, `mapSpace`              | `packages/sim/src/solvable.ts`                             |
+| `checkPuzzle` (is it well-formed), `fastestPossible`                  | `packages/sim/src/validate.ts`                             |
+| Engine tests (determinism, presets solvable, no stuck ants)           | `packages/sim/src/sim.test.ts`                             |
+| Canvas renderer: arena, ants, every view layer, `still()`, `ghosts()` | `src/sim/renderer.ts`                                      |
+| Session: the frame loop, camera, input, modes, rule knobs             | `src/sim/session.ts`                                       |
+| Lab UI: stage + panel, race panel, strip plot                         | `src/sim/lab.tsx`, `src/sim/stage.tsx`                     |
+| Race: one worker per core, pool, board canvas                         | `src/race/race.worker.ts`, `race.ts`, `board.tsx`          |
+| Headless trials for the charts' "Run it on this machine"              | `src/race/trials.ts`                                       |
+| Keyhole + Planner views (configuration space in a worker)             | `src/space/space.worker.ts`, `use-space.ts`, `keyhole.tsx` |
+| Editor: canvas, shape painter, draft, live solvability check          | `src/editor/*`, page `src/app/build.tsx`                   |
+| Science section, charts, bench data                                   | `src/science/science.tsx`, `sweep-chart.tsx`, `data.json`  |
+| Gallery API: list, get, publish, record, report                       | `server/puzzles.ts`                                        |
+| Publish-time planner check in a Bun Worker                            | `server/route-check.ts`, `server/route-worker.ts`          |
+| Moderation API (token) + page                                         | `server/admin.ts`, `src/app/admin.tsx`                     |
+| Anonymous caller id (salted IP hash), rate limits, TTL cache          | `server/who.ts`, `server/limits.ts`                        |
+| Title cleaning and blocklist                                          | `server/titles.ts`                                         |
 
 ## Routes / URLs
 
 Explicit in `src/app/routes.tsx`. All nest under `Layout`.
 
-| Route | Serves | File | Loader |
-| --- | --- | --- | --- |
-| `/` | the lab on piano-movers + the science section | `src/app/home.tsx` | `homeLoader` (prefetch `puzzles.get`) |
-| `/puzzles` | built-in puzzles + visitors' gallery (Most played / Newest) | `src/app/puzzles.tsx` | `puzzlesLoader` |
-| `/p/:id` | the lab on a preset or published puzzle | `src/app/puzzle.tsx` | `puzzleLoader` (404 when unknown) |
-| `/build` | the editor; `?from=<id>` opens a copy of that puzzle | `src/app/build.tsx` | `buildLoader` |
-| `/admin` | moderation, asks for `ADMIN_TOKEN` (not linked) | `src/app/admin.tsx` | none |
-| `/healthz` | DB health JSON | `server.ts` | |
-| `/api/trpc/*` | tRPC: `puzzles.*`, `admin.*` | `server/router.ts` | |
-| unmatched GET | 404 page | `src/app/error-boundary.tsx` | |
+| Route         | Serves                                                      | File                         | Loader                                |
+| ------------- | ----------------------------------------------------------- | ---------------------------- | ------------------------------------- |
+| `/`           | the lab on piano-movers + the science section               | `src/app/home.tsx`           | `homeLoader` (prefetch `puzzles.get`) |
+| `/puzzles`    | built-in puzzles + visitors' gallery (Most played / Newest) | `src/app/puzzles.tsx`        | `puzzlesLoader`                       |
+| `/p/:id`      | the lab on a preset or published puzzle                     | `src/app/puzzle.tsx`         | `puzzleLoader` (404 when unknown)     |
+| `/build`      | the editor; `?from=<id>` opens a copy of that puzzle        | `src/app/build.tsx`          | `buildLoader`                         |
+| `/admin`      | moderation, asks for `ADMIN_TOKEN` (not linked)             | `src/app/admin.tsx`          | none                                  |
+| `/healthz`    | DB health JSON                                              | `server.ts`                  |                                       |
+| `/api/trpc/*` | tRPC: `puzzles.*`, `admin.*`                                | `server/router.ts`           |                                       |
+| unmatched GET | 404 page                                                    | `src/app/error-boundary.tsx` |                                       |
 
 ## Data model
 
@@ -70,15 +70,19 @@ Explicit in `src/app/routes.tsx`. All nest under `Layout`.
 ## Systems
 
 ### The ant model
+
 Each ant is free (searching, returning, in the nest) or carrying. A carrier is **informed** for about 10 s after biting (pulls toward home: scent downhill + 0.3 × straight line + personal error) and then a **conformist** (turns her pull toward her grip point's velocity). Outward pull = puller, inward = lifter. She lets go after ~120 s, sooner when stalled, at once when scraped against a wall. Nothing global steers the load. Details and what was guessed: the science section and `params.ts`.
 
 ### Physics
+
 Overdamped rigid body, `A u = b` for `(vx, vy, ω)`; wall contacts by SAT + projected Gauss-Seidel with Coulomb friction. 60 steps per sim second. Deterministic per seed **within one JS engine** (trig differs in the last bits between V8 and JSC), so the server never replays a run.
 
 ### Speed
+
 `session.ts` steps within a frame budget (11 ms, 28 ms at Max). The race and the charts run colonies headless in workers, one per core (`coreCount()` = cores − 1, max 16). Picking a colony in the race replays its seed in the lab, exactly.
 
 ### Server
+
 No accounts. `ctx.who` is a salted hash of the caller's IP. Publish: zod → `checkPuzzle` → planner in a worker thread (one at a time, 30 s) → dedupe by hash. Record: a time faster than `fastestPossible` is refused. Three reports hide a puzzle. In-memory rate limits and a 15 s list cache (single instance).
 
 ## Gotchas

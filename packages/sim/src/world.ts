@@ -1,5 +1,15 @@
 import { Fields, UNKNOWN } from './field'
-import { collide, distToPoly, emptyQuad, hyp, placeRect, segmentPoly, wrap, type Contact, type Poly } from './geom'
+import {
+  collide,
+  distToPoly,
+  emptyQuad,
+  hyp,
+  placeRect,
+  segmentPoly,
+  wrap,
+  type Contact,
+  type Poly,
+} from './geom'
 import { DEFAULT_PARAMS, type Params } from './params'
 import { NEST_R, WALL_T, type Puzzle } from './puzzle'
 import { Rng } from './rng'
@@ -392,7 +402,8 @@ export class World {
       } else {
         const sp = hyp(vsx, vsy)
         const wgt = Math.min(1, sp / P.vRef)
-        if (wgt > 0.02) ant.dir += P.conformity * wgt * Math.sin(Math.atan2(vsy, vsx) - ant.dir) * DT
+        if (wgt > 0.02)
+          ant.dir += P.conformity * wgt * Math.sin(Math.atan2(vsy, vsx) - ant.dir) * DT
         ant.dir = wrap(ant.dir + noise * this.rng.gauss())
       }
       const dx = Math.cos(ant.dir)
@@ -458,7 +469,9 @@ export class World {
 
     // u = A⁻¹ b: the motion with no walls.
     const det =
-      a00 * (a11 * a22 - a12 * a12) - a01 * (a01 * a22 - a12 * a02) + a02 * (a01 * a12 - a11 * a02) || 1e-9
+      a00 * (a11 * a22 - a12 * a12) -
+        a01 * (a01 * a22 - a12 * a02) +
+        a02 * (a01 * a12 - a11 * a02) || 1e-9
     const i00 = (a11 * a22 - a12 * a12) / det
     const i01 = (a02 * a12 - a01 * a22) / det
     const i02 = (a01 * a12 - a02 * a11) / det
@@ -472,7 +485,8 @@ export class World {
     // Walls: no contact may close faster than its gap allows; overlap is pushed out.
     const contacts = this.contacts
     contacts.length = 0
-    for (const piece of this.pieces) for (const wall of this.walls) collide(piece, wall, MARGIN, contacts)
+    for (const piece of this.pieces)
+      for (const wall of this.walls) collide(piece, wall, MARGIN, contacts)
     const n = contacts.length
     for (const ct of contacts) if (-ct.sep > this.deepest) this.deepest = -ct.sep
     if (n > 0) {

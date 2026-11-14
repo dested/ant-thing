@@ -51,7 +51,10 @@ const first = args.seed
 const per = Math.ceil(args.seeds / jobs)
 const passthrough = argv.filter((a, i) => {
   const prev = argv[i - 1]
-  return !['--jobs', '--seeds', '--seed', '--json'].includes(a) && !(prev && ['--jobs', '--seeds', '--seed'].includes(prev))
+  return (
+    !['--jobs', '--seeds', '--seed', '--json'].includes(a) &&
+    !(prev && ['--jobs', '--seeds', '--seed'].includes(prev))
+  )
 })
 const started = performance.now()
 const children: Promise<Result[]>[] = []
@@ -59,7 +62,10 @@ for (let j = 0; j < jobs; j++) {
   const a = first + j * per
   const b = Math.min(first + args.seeds - 1, a + per - 1)
   if (a > b) break
-  const proc = Bun.spawn(['bun', import.meta.path, ...passthrough, '--from', String(a), '--to', String(b)], { stdout: 'pipe', stderr: 'inherit' })
+  const proc = Bun.spawn(
+    ['bun', import.meta.path, ...passthrough, '--from', String(a), '--to', String(b)],
+    { stdout: 'pipe', stderr: 'inherit' }
+  )
   children.push(
     new Response(proc.stdout).text().then((text) =>
       text
@@ -75,8 +81,12 @@ for (let j = 0; j < jobs; j++) {
   )
 }
 const results = (await Promise.all(children)).flat().sort((a, b) => a.seed - b.seed)
-const solved = results.filter((r) => r.solved).map((r) => r.time).sort((a, b) => a - b)
-const q = (f: number): number => solved[Math.min(solved.length - 1, Math.floor(f * solved.length))] ?? Number.NaN
+const solved = results
+  .filter((r) => r.solved)
+  .map((r) => r.time)
+  .sort((a, b) => a - b)
+const q = (f: number): number =>
+  solved[Math.min(solved.length - 1, Math.floor(f * solved.length))] ?? Number.NaN
 const summary = {
   puzzle: args.puzzleId,
   ants: args.puzzle.ants,

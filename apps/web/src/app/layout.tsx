@@ -24,6 +24,11 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        <a
+          href="https://github.com/dested/ant-thing"
+          className="ml-auto text-sm font-medium hover:underline hover:underline-offset-4">
+          Source
+        </a>
       </header>
       <main>
         <Outlet />

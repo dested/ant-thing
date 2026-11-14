@@ -4,9 +4,7 @@
   "scheme": "antthing",
   "bundleId": "com.dested.antthing",
   "appId": "com.dested.antthing",
-  "surfaces": [
-    "web"
-  ],
+  "surfaces": ["web"],
   "apiPort": 7268,
   "metroPort": 7269,
   "desktopPort": 7270,

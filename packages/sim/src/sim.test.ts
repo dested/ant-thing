@@ -1,5 +1,20 @@
 import { describe, expect, test } from 'bun:test'
-import { buildShape, CARRY, checkPuzzle, DT, findRoute, isConnected, NEST, overlaps, preset, PRESETS, puzzleSchema, tCells, World, type Puzzle } from './index'
+import {
+  buildShape,
+  CARRY,
+  checkPuzzle,
+  DT,
+  findRoute,
+  isConnected,
+  NEST,
+  overlaps,
+  preset,
+  PRESETS,
+  puzzleSchema,
+  tCells,
+  World,
+  type Puzzle,
+} from './index'
 
 const piano = preset('piano-movers')?.puzzle
 const open = preset('open-field')?.puzzle
@@ -13,7 +28,12 @@ describe('shape', () => {
     // Perimeter 2 * (22 + 12) cells plus the inner notches, two grip points per cell edge.
     expect(shape.sites.length).toBeGreaterThan(130)
     expect(isConnected(tCells())).toBe(true)
-    expect(isConnected([[0, 0], [2, 0]])).toBe(false)
+    expect(
+      isConnected([
+        [0, 0],
+        [2, 0],
+      ])
+    ).toBe(false)
   })
 })
 
@@ -27,8 +47,21 @@ describe('puzzles', () => {
 
   test('every preset passes the cheap checks, and the checks catch a load in a wall', () => {
     for (const p of PRESETS) expect(checkPuzzle(p.puzzle)).toBeNull()
-    expect(checkPuzzle({ ...piano, load: { ...piano.load, x: 490, y: 100 } })).toContain('inside a wall')
-    expect(checkPuzzle({ ...open, load: { ...open.load, cells: [[0, 0], [5, 5]] } })).toContain('more than one piece')
+    expect(checkPuzzle({ ...piano, load: { ...piano.load, x: 490, y: 100 } })).toContain(
+      'inside a wall'
+    )
+    expect(
+      checkPuzzle({
+        ...open,
+        load: {
+          ...open.load,
+          cells: [
+            [0, 0],
+            [5, 5],
+          ],
+        },
+      })
+    ).toContain('more than one piece')
     expect(checkPuzzle({ ...open, nest: { x: 2000, y: 10 } })).toContain('nest')
   })
 
@@ -70,7 +103,8 @@ describe('world', () => {
     for (let i = 0; i < 240 / DT; i++) {
       w.step()
       if (i % 20 !== 0) continue
-      for (const piece of w.pieces) for (const wall of w.walls) expect(overlaps(piece, wall, 1)).toBe(false)
+      for (const piece of w.pieces)
+        for (const wall of w.walls) expect(overlaps(piece, wall, 1)).toBe(false)
     }
     expect(w.deepest).toBeLessThan(1)
   }, 60_000)
@@ -82,7 +116,9 @@ describe('world', () => {
     for (let i = 0; i < 200 / DT; i++) w.step()
     const looks: { x: number; y: number; free: boolean }[][] = []
     for (let look = 0; look < 3; look++) {
-      looks.push(w.ants.map((a) => ({ x: a.x, y: a.y, free: a.state !== CARRY && a.state !== NEST })))
+      looks.push(
+        w.ants.map((a) => ({ x: a.x, y: a.y, free: a.state !== CARRY && a.state !== NEST }))
+      )
       for (let i = 0; i < 4 / DT; i++) w.step()
     }
     let stuck = 0

@@ -76,3 +76,6 @@ friction. Load shape = grid cells → rects (collision) + boundary sites (grip p
   conformity 0 / 0.1 → 0%, 0.25 → 52%, 0.5 → 75%, 1 → 65%, 2 → 52%, 3 → 14%, 5 → 0%;
   ants 25 → 23%, 50 → 46%, 100 → 50%, 200 → 52%, 400 → 65%, 800 → 92%.
 - 2026-11-14: kit written (ui.md, cliffnotes, decisions, verify, README, LICENSE), e2e rewritten, brand mark fixed, social card.
+- 2026-11-14: where a newcomer thinks home is (96 colonies each, 30 min cap): scent alone 54, the page's mix 62, the straight
+  line alone 82; newcomers who know nothing 19. Leading for 20 s beats 10 s (77 vs 62) and 40 s is bad (24). The straight line
+  wins on this layout because the slits sit on it; the page says so instead of hiding it.

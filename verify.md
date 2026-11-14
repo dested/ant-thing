@@ -45,7 +45,7 @@ A rule change that moves the piano-movers rate by more than a few points changes
 ## Science data `[medium]`
 
 ```bash
-cd packages/sim && bun bench/science.ts > ../../apps/web/src/science/data.json   # 23 conditions × 96 colonies, about 25 min on 20 cores
+cd packages/sim && bun bench/science.ts > ../../apps/web/src/science/data.json   # 22 conditions × 96 colonies, about 25 min on 20 cores
 ```
 
 ## E2E `[medium]`

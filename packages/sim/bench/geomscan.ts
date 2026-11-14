@@ -12,7 +12,11 @@ function make(slit: number, big: number, stem: number, small: number, mid: numbe
   const x1 = 490
   const x2 = x1 + mid + 14
   const cy = Math.floor(big / 2) - 1
-  const cells = [...bar(0, 0, 2, big), ...bar(2, cy, stem, 2), ...bar(2 + stem, cy - (small - 2) / 2, 2, small)]
+  const cells = [
+    ...bar(0, 0, 2, big),
+    ...bar(2, cy, stem, 2),
+    ...bar(2 + stem, cy - (small - 2) / 2, 2, small),
+  ]
   return {
     v: 1,
     w: 1040,
@@ -43,5 +47,7 @@ const cases: [number, number, number, number, number][] = [
 for (const [slit, big, stem, small, mid] of cases) {
   const t0 = performance.now()
   const r = findRoute(make(slit, big, stem, small, mid), 4, 120, 40_000_000)
-  console.log(`slit=${slit} big=${big * 14} stem=${stem * 14} small=${small * 14} mid=${mid}: ${r.solvable ? 'SOLVABLE' : 'no'} poses=${r.path.length / 3} explored=${r.explored} [${((performance.now() - t0) / 1000).toFixed(1)}s]`)
+  console.log(
+    `slit=${slit} big=${big * 14} stem=${stem * 14} small=${small * 14} mid=${mid}: ${r.solvable ? 'SOLVABLE' : 'no'} poses=${r.path.length / 3} explored=${r.explored} [${((performance.now() - t0) / 1000).toFixed(1)}s]`
+  )
 }

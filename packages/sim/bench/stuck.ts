@@ -14,7 +14,9 @@ for (let seed = 1; seed <= args.seeds; seed++) {
   for (let t = 0; t < at / DT; t++) world.step()
   const looks: { x: number; y: number; free: boolean }[][] = []
   for (let look = 0; look < 3; look++) {
-    looks.push(world.ants.map((a) => ({ x: a.x, y: a.y, free: a.state !== CARRY && a.state !== NEST })))
+    looks.push(
+      world.ants.map((a) => ({ x: a.x, y: a.y, free: a.state !== CARRY && a.state !== NEST }))
+    )
     for (let t = 0; t < 4 / DT; t++) world.step()
   }
   let stuck = 0

@@ -12,13 +12,13 @@ A colony of simulated ants carries a T-shaped load through two narrow slits, the
 
 ## How the ants work
 
-| Rule | What she does |
-| --- | --- |
-| Bite and pull | An ant at a free spot on the load's edge bites. Outward pull: she pulls. Inward: she lifts, which cuts friction. Ants never push. |
-| A newcomer knows the way | For about ten seconds after biting she pulls toward the nest, with her own error. |
-| Then she goes along | After that she turns her pull toward the way her own grip point is already moving. |
-| Scent | Ants leaving the nest mark how long ago they left. A newcomer reads home off the marks near the load. Marks stop at walls. |
-| Letting go | After about two minutes, sooner when stuck, at once when pressed against a wall. |
+| Rule                     | What she does                                                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| Bite and pull            | An ant at a free spot on the load's edge bites. Outward pull: she pulls. Inward: she lifts, which cuts friction. Ants never push. |
+| A newcomer knows the way | For about ten seconds after biting she pulls toward the nest, with her own error.                                                 |
+| Then she goes along      | After that she turns her pull toward the way her own grip point is already moving.                                                |
+| Scent                    | Ants leaving the nest mark how long ago they left. A newcomer reads home off the marks near the load. Marks stop at walls.        |
+| Letting go               | After about two minutes, sooner when stuck, at once when pressed against a wall.                                                  |
 
 The engine is `packages/sim`: a deterministic TypeScript package with no dependencies but zod. `packages/sim/src/params.ts` lists every number the behaviour depends on. The page says plainly which parts are measured and which are guessed.
 

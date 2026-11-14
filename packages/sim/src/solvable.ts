@@ -29,7 +29,8 @@ export interface SpaceMap {
 /** A lattice step that keeps a puzzle of any size inside the search budget. */
 export function latticeStep(puzzle: Puzzle, turns = 120, budget = 12_000_000): number {
   let step = 4
-  while ((Math.floor(puzzle.w / step) + 1) * (Math.floor(puzzle.h / step) + 1) * turns > budget) step++
+  while ((Math.floor(puzzle.w / step) + 1) * (Math.floor(puzzle.h / step) + 1) * turns > budget)
+    step++
   return step
 }
 
@@ -38,13 +39,25 @@ export function latticeStep(puzzle: Puzzle, turns = 120, budget = 12_000_000): n
  * This is the planner the ants do not have: it is used to check that a puzzle can be solved at all,
  * and to draw the shortest solution next to what the colony actually did. It never steers an ant.
  */
-export function findRoute(puzzle: Puzzle, step = latticeStep(puzzle), turns = 120, budget = 12_000_000): Route {
+export function findRoute(
+  puzzle: Puzzle,
+  step = latticeStep(puzzle),
+  turns = 120,
+  budget = 12_000_000
+): Route {
   const found = search(puzzle, step, turns, budget, true)
-  return found ? { solvable: found.path.length > 0, path: found.path, explored: found.explored } : { solvable: false, path: [], explored: 0 }
+  return found
+    ? { solvable: found.path.length > 0, path: found.path, explored: found.explored }
+    : { solvable: false, path: [], explored: 0 }
 }
 
 /** The whole reachable configuration space, for the map the page draws the colony's path on. */
-export function mapSpace(puzzle: Puzzle, step = latticeStep(puzzle), turns = 120, budget = 12_000_000): SpaceMap | null {
+export function mapSpace(
+  puzzle: Puzzle,
+  step = latticeStep(puzzle),
+  turns = 120,
+  budget = 12_000_000
+): SpaceMap | null {
   const found = search(puzzle, step, turns, budget, false)
   if (!found) return null
   const { nx, ny, seen, goals } = found
@@ -60,7 +73,15 @@ export function mapSpace(puzzle: Puzzle, step = latticeStep(puzzle), turns = 120
       }
     }
   }
-  return { step, cols: nx, rows: turns, open, goal, solvable: found.path.length > 0, path: found.path }
+  return {
+    step,
+    cols: nx,
+    rows: turns,
+    open,
+    goal,
+    solvable: found.path.length > 0,
+    path: found.path,
+  }
 }
 
 interface Search {
@@ -72,7 +93,13 @@ interface Search {
   explored: number
 }
 
-function search(puzzle: Puzzle, step: number, turns: number, budget: number, stopAtGoal: boolean): Search | null {
+function search(
+  puzzle: Puzzle,
+  step: number,
+  turns: number,
+  budget: number,
+  stopAtGoal: boolean
+): Search | null {
   const shape = buildShape(puzzle.load.cells, puzzle.load.cell)
   const { w, h } = puzzle
   const walls: Poly[] = [
@@ -105,16 +132,19 @@ function search(puzzle: Puzzle, step: number, turns: number, budget: number, sto
     for (let r = 0; r < pieces.length; r++) {
       const rect = shape.rects[r]
       const piece = pieces[r]
-      if (rect && piece) placeRect(piece, rect.x0, rect.y0, rect.x1, rect.y1, i * step, j * step, c, s)
+      if (rect && piece)
+        placeRect(piece, rect.x0, rect.y0, rect.x1, rect.y1, i * step, j * step, c, s)
     }
   }
   const free = (i: number, j: number, k: number): boolean => {
     place(i, j, k)
-    for (const piece of pieces) for (const wall of walls) if (overlaps(piece, wall, 0.6)) return false
+    for (const piece of pieces)
+      for (const wall of walls) if (overlaps(piece, wall, 0.6)) return false
     return true
   }
   const atNest = (): boolean => {
-    for (const piece of pieces) if (distToPoly(piece, puzzle.nest.x, puzzle.nest.y) <= NEST_R) return true
+    for (const piece of pieces)
+      if (distToPoly(piece, puzzle.nest.x, puzzle.nest.y) <= NEST_R) return true
     return false
   }
 
@@ -176,7 +206,11 @@ function search(puzzle: Puzzle, step: number, turns: number, budget: number, sto
     for (let cur = goal; cur >= 0; cur = parent[cur] ?? -1) rev.push(cur)
     for (let n = rev.length - 1; n >= 0; n--) {
       const cur = rev[n] ?? 0
-      path.push((cur % nx) * step, (Math.floor(cur / nx) % ny) * step, (Math.floor(cur / (nx * ny)) * 2 * Math.PI) / turns)
+      path.push(
+        (cur % nx) * step,
+        (Math.floor(cur / nx) % ny) * step,
+        (Math.floor(cur / (nx * ny)) * 2 * Math.PI) / turns
+      )
     }
   }
   return { nx, ny, seen, goals, path, explored: tail }

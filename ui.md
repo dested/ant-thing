@@ -20,30 +20,30 @@
 
 ## Palette
 
-| Role | Class | Use | Value |
-| --- | --- | --- | --- |
-| Background (bench) | `bg-background` | page, panels | `#d3d6d0` |
-| Card (paper) | `bg-card` | arena floor, thumbnails | `#e9eae6` |
-| Popover (acrylic) | `bg-popover` | overlays on the arena, tooltips, walls | `#fafaf8` |
-| Foreground (ink) | `text-foreground`, `bg-foreground` | text, pressed controls, primary button | `#141913` |
-| Muted | `text-muted-foreground` | readout labels, axis text, context bars | `#4c524b` |
-| Accent | `bg-accent` | hover | `#babeb6` |
-| Border / Input | `border`, `border-input` | hairlines (16% ink), control outlines (28% ink) | |
-| Load | `bg-load`, `fill-load` | the load, its path, "this page's setting" | `#ce0e1a` |
-| Marker | `bg-marker` | paint dot: an ant who knows the way | `#f7be1c` |
-| Lifter | `bg-lifter`, `fill-lifter` | paint dot: a lifting ant; planner ghosts; "this machine" in a chart | `#1a73d5` |
-| Success | `text-success` | "There is a way through", a delivered colony's frame | `#1d7d3e` |
-| Destructive | `text-destructive` | errors, "No way through" | `#ce0e1a` |
+| Role               | Class                              | Use                                                                 | Value     |
+| ------------------ | ---------------------------------- | ------------------------------------------------------------------- | --------- |
+| Background (bench) | `bg-background`                    | page, panels                                                        | `#d3d6d0` |
+| Card (paper)       | `bg-card`                          | arena floor, thumbnails                                             | `#e9eae6` |
+| Popover (acrylic)  | `bg-popover`                       | overlays on the arena, tooltips, walls                              | `#fafaf8` |
+| Foreground (ink)   | `text-foreground`, `bg-foreground` | text, pressed controls, primary button                              | `#141913` |
+| Muted              | `text-muted-foreground`            | readout labels, axis text, context bars                             | `#4c524b` |
+| Accent             | `bg-accent`                        | hover                                                               | `#babeb6` |
+| Border / Input     | `border`, `border-input`           | hairlines (16% ink), control outlines (28% ink)                     |           |
+| Load               | `bg-load`, `fill-load`             | the load, its path, "this page's setting"                           | `#ce0e1a` |
+| Marker             | `bg-marker`                        | paint dot: an ant who knows the way                                 | `#f7be1c` |
+| Lifter             | `bg-lifter`, `fill-lifter`         | paint dot: a lifting ant; planner ghosts; "this machine" in a chart | `#1a73d5` |
+| Success            | `text-success`                     | "There is a way through", a delivered colony's frame                | `#1d7d3e` |
+| Destructive        | `text-destructive`                 | errors, "No way through"                                            | `#ce0e1a` |
 
 ## Type
 
 One family: **Bricolage Grotesque Variable** (`@fontsource-variable/bricolage-grotesque`, `wdth` axis).
 
-| Role | Class | Notes |
-| --- | --- | --- |
+| Role    | Class          | Notes                                                                    |
+| ------- | -------------- | ------------------------------------------------------------------------ |
 | Display | `font-display` | the same family at `wdth` 78 (condensed), `font-bold` / `font-extrabold` |
-| Body | default | `wdth` 100 |
-| Numbers | `tabular` | tabular figures; every readout, clock and count |
+| Body    | default        | `wdth` 100                                                               |
+| Numbers | `tabular`      | tabular figures; every readout, clock and count                          |
 
 Scale: big readout (the clock, a race score) `font-display text-5xl font-extrabold leading-none`; page/section heading in prose `font-display text-4xl font-extrabold leading-none`; panel title `font-display text-2xl font-bold`; chart or rule title `font-display text-xl font-bold`; body `text-base leading-relaxed` capped at `max-w-[65ch]`; controls and readouts `text-sm`.
 
@@ -61,16 +61,16 @@ The sim is the only thing that moves. Chrome changes are instant: no entrance an
 
 ## Components
 
-| Component | File | Notes |
-| --- | --- | --- |
-| `Lab` | `apps/web/src/sim/lab.tsx` | the arena + panel; also hosts the race board and panel |
-| `Segmented`, `Chip` | `apps/web/src/components/ui/segmented.tsx` | one-of-few joined buttons; an on/off view layer |
-| `Slider`, `Switch` | `apps/web/src/components/ui/{slider,switch}.tsx` | Base UI, hairline track, square ink thumb |
-| `Button`, `Input` | `apps/web/src/components/ui/` | Base UI; `type="button"` by default |
-| `PuzzleThumb` | `apps/web/src/sim/thumb.tsx` | SVG still of a puzzle |
-| `SweepChart` | `apps/web/src/science/sweep-chart.tsx` | column chart: grey context bars, red for the page's setting, blue dots for the visitor's run |
-| `RaceBoard` | `apps/web/src/race/board.tsx` | canvas grid of mini arenas |
-| `Keyhole` | `apps/web/src/space/keyhole.tsx` | inset map on the arena |
+| Component           | File                                             | Notes                                                                                        |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `Lab`               | `apps/web/src/sim/lab.tsx`                       | the arena + panel; also hosts the race board and panel                                       |
+| `Segmented`, `Chip` | `apps/web/src/components/ui/segmented.tsx`       | one-of-few joined buttons; an on/off view layer                                              |
+| `Slider`, `Switch`  | `apps/web/src/components/ui/{slider,switch}.tsx` | Base UI, hairline track, square ink thumb                                                    |
+| `Button`, `Input`   | `apps/web/src/components/ui/`                    | Base UI; `type="button"` by default                                                          |
+| `PuzzleThumb`       | `apps/web/src/sim/thumb.tsx`                     | SVG still of a puzzle                                                                        |
+| `SweepChart`        | `apps/web/src/science/sweep-chart.tsx`           | column chart: grey context bars, red for the page's setting, blue dots for the visitor's run |
+| `RaceBoard`         | `apps/web/src/race/board.tsx`                    | canvas grid of mini arenas                                                                   |
+| `Keyhole`           | `apps/web/src/space/keyhole.tsx`                 | inset map on the arena                                                                       |
 
 Charts: columns ≤ 24px with a 4px rounded top, hairline grid at 0/50/100%, value on the cap, text in text tokens (never the series colour), a legend row under the plot, a tooltip on hover and focus, an `sr-only` table.
 

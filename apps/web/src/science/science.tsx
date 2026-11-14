@@ -10,7 +10,7 @@ interface ScienceData {
   conformity: Point[]
   ants: Point[]
   informedTime: Point[]
-  knowledge: { noCompass: Point; noScent: Point; neither: Point }
+  home: { scentOnly: Point; lineOnly: Point }
 }
 const science: ScienceData = data
 
@@ -48,7 +48,8 @@ const of = (point: Point | undefined): string =>
 /** Below the lab: what the ants are doing, what the numbers say, and what was made up. */
 export function Science() {
   const usual = science.conformity.find((point) => point.value === 1)
-  const { noCompass, noScent, neither } = science.knowledge
+  const { scentOnly, lineOnly } = science.home
+  const clueless = science.informedTime.find((point) => point.value === 0)
   return (
     <div className="border-t">
       <div className="mx-auto flex max-w-3xl flex-col gap-16 px-5 py-16">
@@ -128,7 +129,7 @@ export function Science() {
             setup={(value) => ({ puzzle: { ...piano, ants: value }, rules: {} })}
           />
           <SweepChart
-            title="How long a newcomer leads"
+            title="A newcomer should lead, but not for long"
             axis="Seconds a newcomer pulls toward home"
             points={science.informedTime}
             cap={science.cap}
@@ -149,11 +150,14 @@ export function Science() {
               conforms, how noisy her pull is and how long she holds on were tuned by me, on this
               puzzle, until colonies solved it.
             </Rule>
-            <Rule name="The compass">
-              A newcomer’s idea of home is the scent mixed with a straight line to the nest. Real
-              ants do keep a home vector, but a straight line ignores walls, so it is a hint the
-              real ants might not have. Without it {of(noCompass)} colonies deliver, against{' '}
-              {of(usual)} with it. Without scent, {of(noScent)}. With neither, {of(neither)}.
+            <Rule name="Where home is">
+              A newcomer’s idea of home is mostly the scent around the load, mixed with a straight
+              line to the nest. Real ants keep a home vector too, but a straight line points through
+              walls, and in this puzzle the slits happen to sit on it. With scent alone{' '}
+              {of(scentOnly)} colonies deliver. With the mix the page uses, {of(usual)}. With the
+              straight line alone, {of(lineOnly)}: on this layout the shortcut beats the trail, so
+              the Scent trails switch makes them better when it is off. With newcomers who know
+              nothing, {of(clueless)}.
             </Rule>
             <Rule name="Two rules I made up">
               A free ant that keeps walking into a wall gives up after about a second and turns

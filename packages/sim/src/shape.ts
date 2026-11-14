@@ -31,7 +31,11 @@ export interface Shape {
 
 const key = (x: number, y: number): number => y * 4096 + x
 
-export function buildShape(cells: readonly (readonly [number, number])[], cell: number, spacing = 7): Shape {
+export function buildShape(
+  cells: readonly (readonly [number, number])[],
+  cell: number,
+  spacing = 7
+): Shape {
   const filled = new Set<number>()
   const unique: [number, number][] = []
   for (const [x, y] of cells) {
@@ -87,7 +91,12 @@ export function buildShape(cells: readonly (readonly [number, number])[], cell: 
     const areaB = (b[2] - b[0] + 1) * (b[3] - b[1] + 1)
     const [x0, y0, x1, y1] = areaA >= areaB ? a : b
     for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) covered.add(key(xx, yy))
-    rects.push({ x0: x0 * cell - cx, y0: y0 * cell - cy, x1: (x1 + 1) * cell - cx, y1: (y1 + 1) * cell - cy })
+    rects.push({
+      x0: x0 * cell - cx,
+      y0: y0 * cell - cy,
+      x1: (x1 + 1) * cell - cx,
+      y1: (y1 + 1) * cell - cy,
+    })
   }
 
   // Sites: along every cell edge that faces empty space.

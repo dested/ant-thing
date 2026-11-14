@@ -70,9 +70,10 @@ async function sweep(values: number[], flags: (value: number) => string[]): Prom
 const conformity = await sweep([0, 0.1, 0.25, 0.5, 1, 2, 3, 5], (v) => ['--set', `conformity=${v}`])
 const ants = await sweep([25, 50, 100, 200, 400, 800], (v) => ['--ants', String(v)])
 const informedTime = await sweep([0, 2, 5, 10, 20, 40], (v) => ['--set', `informedTime=${v}`])
-const [noCompass] = await sweep([0], () => ['--set', 'compass=0'])
-const [noScent] = await sweep([0], () => ['--set', 'scent=false'])
-const [neither] = await sweep([0], () => ['--set', 'compass=0,scent=false'])
+// Where a newcomer thinks home is: the scent alone, or the straight line alone (with scent off the
+// compass weight no longer matters: she has only her own home vector).
+const [scentOnly] = await sweep([0], () => ['--set', 'compass=0'])
+const [lineOnly] = await sweep([0], () => ['--set', 'scent=false'])
 
 console.log(
   JSON.stringify(
@@ -83,7 +84,7 @@ console.log(
       conformity,
       ants,
       informedTime,
-      knowledge: { noCompass, noScent, neither },
+      home: { scentOnly, lineOnly },
     },
     null,
     1

@@ -20,7 +20,11 @@ export const LIMITS = {
   maxAnts: 3000,
 } as const
 
-const coord = z.number().finite().min(-50).max(LIMITS.maxW + 50)
+const coord = z
+  .number()
+  .finite()
+  .min(-50)
+  .max(LIMITS.maxW + 50)
 const cellIndex = z
   .number()
   .int()
@@ -38,7 +42,10 @@ export const puzzleSchema = z.object({
     /** Cell size in units. */
     cell: z.number().int().min(LIMITS.minCell).max(LIMITS.maxCell),
     /** Filled cells [cx, cy] on a grid. */
-    cells: z.array(z.tuple([cellIndex, cellIndex])).min(1).max(LIMITS.maxCells),
+    cells: z
+      .array(z.tuple([cellIndex, cellIndex]))
+      .min(1)
+      .max(LIMITS.maxCells),
     /** Start pose: the shape's centroid and its rotation in radians. */
     x: coord,
     y: coord,
@@ -79,7 +86,13 @@ function post(x: number, y: number): Wall {
  * The inner walls of a perfect maze (one route between any two cells), carved depth-first from a seed.
  * Cells are `cw` by `ch`; the arena edge is the outer wall. Runs of wall in a line come back as one segment.
  */
-export function mazeWalls(cols: number, rows: number, cw: number, ch: number, seed: number): Wall[] {
+export function mazeWalls(
+  cols: number,
+  rows: number,
+  cw: number,
+  ch: number,
+  seed: number
+): Wall[] {
   const rng = new Rng(seed)
   const at = (c: number, r: number): number => r * cols + c
   const seen = new Uint8Array(cols * rows)
@@ -130,11 +143,21 @@ export function mazeWalls(cols: number, rows: number, cw: number, ch: number, se
       }
     }
   }
-  return walls.map(([x1, y1, x2, y2]) => [Math.round(x1), Math.round(y1), Math.round(x2), Math.round(y2)])
+  return walls.map(([x1, y1, x2, y2]) => [
+    Math.round(x1),
+    Math.round(y1),
+    Math.round(x2),
+    Math.round(y2),
+  ])
 }
 
 /** A sofa: a thick bar with a bite out of one long side, the shape that turns a corner best. */
-export function sofaCells(length: number, depth: number, notchLength: number, notchDepth: number): [number, number][] {
+export function sofaCells(
+  length: number,
+  depth: number,
+  notchLength: number,
+  notchDepth: number
+): [number, number][] {
   const start = Math.floor((length - notchLength) / 2)
   return bar(0, 0, length, depth).filter(
     ([x, y]) => !(x >= start && x < start + notchLength && y >= depth - notchDepth)

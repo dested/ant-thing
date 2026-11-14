@@ -8,9 +8,15 @@ import { buildShape, isConnected } from './shape'
  */
 export function checkPuzzle(puzzle: Puzzle): string | null {
   const { w, h, walls, load, nest } = puzzle
-  if (!isConnected(load.cells)) return 'The load is in more than one piece. Join the pieces or erase the stray cells.'
+  if (!isConnected(load.cells))
+    return 'The load is in more than one piece. Join the pieces or erase the stray cells.'
   for (const [x1, y1, x2, y2] of walls) {
-    if (Math.min(x1, x2) < 0 || Math.max(x1, x2) > w || Math.min(y1, y2) < 0 || Math.max(y1, y2) > h) {
+    if (
+      Math.min(x1, x2) < 0 ||
+      Math.max(x1, x2) > w ||
+      Math.min(y1, y2) < 0 ||
+      Math.max(y1, y2) > h
+    ) {
       return 'A wall runs outside the arena. Drag its ends back inside.'
     }
   }
@@ -28,7 +34,8 @@ export function checkPuzzle(puzzle: Puzzle): string | null {
     const dx = x2 - x1
     const dy = y2 - y1
     const len2 = dx * dx + dy * dy
-    const t = len2 < 1e-9 ? 0 : Math.max(0, Math.min(1, ((nest.x - x1) * dx + (nest.y - y1) * dy) / len2))
+    const t =
+      len2 < 1e-9 ? 0 : Math.max(0, Math.min(1, ((nest.x - x1) * dx + (nest.y - y1) * dy) / len2))
     if (hyp(nest.x - (x1 + dx * t), nest.y - (y1 + dy * t)) < WALL_T / 2 + 10) {
       return 'The nest is inside a wall. Move one of them.'
     }
@@ -40,7 +47,8 @@ export function checkPuzzle(puzzle: Puzzle): string | null {
   for (const r of shape.rects) {
     placeRect(piece, r.x0, r.y0, r.x1, r.y1, load.x, load.y, c, s)
     for (const poly of polys) {
-      if (overlaps(piece, poly, 0.6)) return 'The load starts inside a wall or over the edge. Move it into open floor.'
+      if (overlaps(piece, poly, 0.6))
+        return 'The load starts inside a wall or over the edge. Move it into open floor.'
     }
   }
   if (hyp(load.x - nest.x, load.y - nest.y) < shape.radius + NEST_R + 20) {
@@ -52,6 +60,7 @@ export function checkPuzzle(puzzle: Puzzle): string | null {
 /** The least sim time a delivery can take: the straight-line distance at a given speed. */
 export function fastestPossible(puzzle: Puzzle, speed: number): number {
   const shape = buildShape(puzzle.load.cells, puzzle.load.cell)
-  const gap = hyp(puzzle.load.x - puzzle.nest.x, puzzle.load.y - puzzle.nest.y) - shape.radius - NEST_R
+  const gap =
+    hyp(puzzle.load.x - puzzle.nest.x, puzzle.load.y - puzzle.nest.y) - shape.radius - NEST_R
   return Math.max(0, gap) / speed
 }
