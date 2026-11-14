@@ -11,12 +11,68 @@ export interface Route {
   explored: number
 }
 
+/** Every pose the load can reach, flattened to "how far across" against "which way it is turned". */
+export interface SpaceMap {
+  /** Lattice spacing in units, and the number of columns (x) and rows (angle). */
+  step: number
+  cols: number
+  rows: number
+  /** cols × rows, row-major: 1 where the load can get to that x at that angle (at some y). */
+  open: Uint8Array
+  /** cols × rows: 1 where such a pose touches the nest. */
+  goal: Uint8Array
+  solvable: boolean
+  /** The shortest solution, as x, y, angle triples. */
+  path: number[]
+}
+
+/** A lattice step that keeps a puzzle of any size inside the search budget. */
+export function latticeStep(puzzle: Puzzle, turns = 120, budget = 12_000_000): number {
+  let step = 4
+  while ((Math.floor(puzzle.w / step) + 1) * (Math.floor(puzzle.h / step) + 1) * turns > budget) step++
+  return step
+}
+
 /**
  * Exhaustive search of the load's configuration space (x, y, angle on a lattice).
  * This is the planner the ants do not have: it is used to check that a puzzle can be solved at all,
  * and to draw the shortest solution next to what the colony actually did. It never steers an ant.
  */
-export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000_000): Route {
+export function findRoute(puzzle: Puzzle, step = latticeStep(puzzle), turns = 120, budget = 12_000_000): Route {
+  const found = search(puzzle, step, turns, budget, true)
+  return found ? { solvable: found.path.length > 0, path: found.path, explored: found.explored } : { solvable: false, path: [], explored: 0 }
+}
+
+/** The whole reachable configuration space, for the map the page draws the colony's path on. */
+export function mapSpace(puzzle: Puzzle, step = latticeStep(puzzle), turns = 120, budget = 12_000_000): SpaceMap | null {
+  const found = search(puzzle, step, turns, budget, false)
+  if (!found) return null
+  const { nx, ny, seen, goals } = found
+  const open = new Uint8Array(nx * turns)
+  const goal = new Uint8Array(nx * turns)
+  for (let k = 0; k < turns; k++) {
+    for (let j = 0; j < ny; j++) {
+      const row = (k * ny + j) * nx
+      for (let i = 0; i < nx; i++) {
+        if (seen[row + i] !== 1) continue
+        open[k * nx + i] = 1
+        if (goals[row + i] === 1) goal[k * nx + i] = 1
+      }
+    }
+  }
+  return { step, cols: nx, rows: turns, open, goal, solvable: found.path.length > 0, path: found.path }
+}
+
+interface Search {
+  nx: number
+  ny: number
+  seen: Uint8Array
+  goals: Uint8Array
+  path: number[]
+  explored: number
+}
+
+function search(puzzle: Puzzle, step: number, turns: number, budget: number, stopAtGoal: boolean): Search | null {
   const shape = buildShape(puzzle.load.cells, puzzle.load.cell)
   const { w, h } = puzzle
   const walls: Poly[] = [
@@ -30,7 +86,7 @@ export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000
   const nx = Math.floor(w / step) + 1
   const ny = Math.floor(h / step) + 1
   const total = nx * ny * turns
-  if (total > budget) return { solvable: false, path: [], explored: 0 }
+  if (total > budget) return null
   const cos: number[] = []
   const sin: number[] = []
   for (let k = 0; k < turns; k++) {
@@ -39,6 +95,7 @@ export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000
   }
   // 0 = unseen, 1 = free and queued, 2 = blocked
   const seen = new Uint8Array(total)
+  const goals = new Uint8Array(stopAtGoal ? 0 : total)
   const parent = new Int32Array(total).fill(-1)
   const queue = new Int32Array(total)
 
@@ -79,7 +136,7 @@ export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000
       }
     }
   }
-  if (start < 0) return { solvable: false, path: [], explored: 0 }
+  if (start < 0) return null
 
   let head = 0
   let tail = 0
@@ -93,8 +150,9 @@ export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000
     const k = Math.floor(cur / (nx * ny))
     place(i, j, k)
     if (atNest()) {
-      goal = cur
-      break
+      if (goal < 0) goal = cur
+      if (stopAtGoal) break
+      goals[cur] = 1
     }
     for (let m = 0; m < 6; m++) {
       const ni = i + (m === 0 ? 1 : m === 1 ? -1 : 0)
@@ -121,5 +179,5 @@ export function findRoute(puzzle: Puzzle, step = 4, turns = 120, budget = 12_000
       path.push((cur % nx) * step, (Math.floor(cur / nx) % ny) * step, (Math.floor(cur / (nx * ny)) * 2 * Math.PI) / turns)
     }
   }
-  return { solvable: goal >= 0, path, explored: tail }
+  return { nx, ny, seen, goals, path, explored: tail }
 }

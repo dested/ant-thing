@@ -118,8 +118,11 @@ export class World {
   /** The load's path: x, y, angle every half second. */
   readonly trace: number[] = []
 
+  /** Where the load touches walls this step, and the sum of every pull on it (force x, y and torque). */
+  readonly contacts: Contact[] = []
+  readonly net = { x: 0, y: 0, t: 0 }
+
   private readonly rng: Rng
-  private readonly contacts: Contact[] = []
   private readonly tmp = { x: 0, y: 0 }
 
   /** Load pose. */
@@ -417,6 +420,9 @@ export class World {
     stats.pullers = pullers
     stats.lifters = lifters
     stats.informed = informed
+    this.net.x = b0
+    this.net.y = b1
+    this.net.t = b2
 
     const drag = this.drag
     if (drag) {

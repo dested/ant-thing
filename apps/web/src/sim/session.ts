@@ -3,7 +3,8 @@ import { fitZoom, Renderer, type Camera, type ViewOptions } from './renderer'
 
 export type Mode = 'watch' | 'ant' | 'hands'
 
-export const RATES = [1, 4, 16, 64] as const
+/** Sim seconds per real second. 0 means as fast as this machine can step it. */
+export const RATES = [1, 4, 16, 64, 0] as const
 export type Rate = (typeof RATES)[number]
 
 /** Seconds of trail-laying before the clock starts, and how fast it plays. */
@@ -36,9 +37,9 @@ export interface Snapshot {
   biting: boolean
   holding: boolean
   zoomed: boolean
-  roles: boolean
-  scent: boolean
-  trace: boolean
+  view: ViewOptions
+  /** Sim seconds per real second actually achieved lately. */
+  pace: number
   conformity: number
   informedTime: number
   scentRule: boolean
@@ -75,9 +76,8 @@ export const IDLE: Snapshot = {
   biting: false,
   holding: false,
   zoomed: false,
-  roles: true,
-  scent: false,
-  trace: false,
+  view: { roles: true, scent: false, trace: false, pulls: false, forces: false, traffic: false },
+  pace: 0,
   conformity: DEFAULT_PARAMS.conformity,
   informedTime: DEFAULT_PARAMS.informedTime,
   scentRule: DEFAULT_PARAMS.scent,
@@ -111,7 +111,8 @@ export class Session {
   private mode: Mode = 'watch'
   private running = true
   private rate: Rate = 4
-  private view: ViewOptions = { roles: true, scent: false, trace: false }
+  private view: ViewOptions = IDLE.view
+  private pace = 0
   private standard = true
   private kind: 'ANTS' | 'HANDS' = 'ANTS'
   private reported = false
@@ -180,9 +181,8 @@ export class Session {
       biting: w.player?.bite ?? false,
       holding: me?.state === CARRY,
       zoomed: this.userCam,
-      roles: this.view.roles,
-      scent: this.view.scent,
-      trace: this.view.trace,
+      view: this.view,
+      pace: this.pace,
       conformity: this.params.conformity,
       informedTime: this.params.informedTime,
       scentRule: this.params.scent,
@@ -547,7 +547,8 @@ export class Session {
     const w = this.world
     const warming = w.warmup > 0
     if (this.running || warming) {
-      this.acc += elapsed * (warming ? WARM_RATE : this.rate)
+      // Rate 0 is "max": ask for more than any machine can do and let the frame budget cap it.
+      this.acc += elapsed * (warming ? WARM_RATE : this.rate || 4000)
       const start = performance.now()
       let steps = 0
       while (this.acc >= DT) {
@@ -577,6 +578,9 @@ export class Session {
       }
       const v = Math.hypot(w.vx, w.vy)
       this.speed += (v - this.speed) * 0.1
+      if (elapsed > 0) this.pace += ((steps * DT) / elapsed - this.pace) * 0.08
+    } else {
+      this.pace = 0
     }
     this.follow(elapsed)
     this.render()

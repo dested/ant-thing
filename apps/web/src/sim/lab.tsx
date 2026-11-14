@@ -6,6 +6,7 @@ import { Chip, Segmented } from '~/components/ui/segmented'
 import { Slider } from '~/components/ui/slider'
 import { Switch } from '~/components/ui/switch'
 import { cn } from '~/lib/utils'
+import type { ViewOptions } from './renderer'
 import { RATES, type Finish, type Mode, type Session, type Snapshot } from './session'
 import { Stage, useSnapshot } from './stage'
 
@@ -15,7 +16,16 @@ const MODES: readonly { value: Mode; label: string }[] = [
   { value: 'hands', label: 'Move it yourself' },
 ]
 
-const SPEEDS = RATES.map(rate => ({ value: rate, label: `${rate}×` }))
+const VIEWS: readonly { key: keyof ViewOptions; label: string }[] = [
+  { key: 'roles', label: 'Roles' },
+  { key: 'scent', label: 'Scent' },
+  { key: 'trace', label: 'Path' },
+  { key: 'pulls', label: 'Pulls' },
+  { key: 'forces', label: 'Forces' },
+  { key: 'traffic', label: 'Traffic' },
+]
+
+const SPEEDS = RATES.map(rate => ({ value: rate, label: rate === 0 ? 'Max' : `${rate}×` }))
 
 export function clock(seconds: number): string {
   const s = Math.floor(seconds)
@@ -217,18 +227,18 @@ function Panel({
         <Row label="Lifting" value={snap.lifters} dot="bg-lifter" />
         <Row label="Know the way" value={snap.informed} dot="bg-marker" />
         <Row label="Colony" value={snap.seed || ''} />
+        <Row label="Speed" value={snap.running ? `${Math.round(snap.pace)}×` : 'Paused'} />
       </dl>
 
-      <div className="flex gap-2">
-        <Chip pressed={snap.roles} onChange={on => session?.setView('roles', on)}>
-          Roles
-        </Chip>
-        <Chip pressed={snap.scent} onChange={on => session?.setView('scent', on)}>
-          Scent
-        </Chip>
-        <Chip pressed={snap.trace} onChange={on => session?.setView('trace', on)}>
-          Path
-        </Chip>
+      <div className="grid grid-cols-3 gap-2">
+        {VIEWS.map(view => (
+          <Chip
+            key={view.key}
+            pressed={snap.view[view.key]}
+            onChange={on => session?.setView(view.key, on)}>
+            {view.label}
+          </Chip>
+        ))}
       </div>
 
       <div className="flex flex-col gap-3">

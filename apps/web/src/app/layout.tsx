@@ -1,4 +1,4 @@
-import { Link, Outlet, ScrollRestoration } from 'react-router'
+import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 
 export function Layout() {
   return (
@@ -7,6 +7,13 @@ export function Layout() {
         <Link to="/" className="font-display text-lg font-extrabold">
           Ant Movers
         </Link>
+        <nav className="flex items-center gap-5 text-sm font-medium">
+          <NavLink
+            to="/puzzles"
+            className={({ isActive }) => (isActive ? 'underline underline-offset-4' : 'hover:underline hover:underline-offset-4')}>
+            Puzzles
+          </NavLink>
+        </nav>
       </header>
       <main>
         <Outlet />

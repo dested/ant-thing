@@ -1,5 +1,5 @@
 import { colors } from '@app/tokens'
-import { ANT_LEN, CARRY, LIFTER, NEST, NEST_R, UNKNOWN, type Puzzle, type World } from '@app/sim'
+import { ANT_LEN, CARRY, LIFTER, NEST, NEST_R, PULLER, UNKNOWN, type Puzzle, type World } from '@app/sim'
 
 export interface Camera {
   /** World point at the centre of the view. */
@@ -10,9 +10,18 @@ export interface Camera {
 }
 
 export interface ViewOptions {
+  /** Paint dots: who knows the way, who is lifting. */
   roles: boolean
+  /** The two scent fields. */
   scent: boolean
+  /** Where the load has been: its path, and a faint print of it every five seconds. */
   trace: boolean
+  /** Every carrier's pull, and the grip points. */
+  pulls: boolean
+  /** The sum of the pulls, the twist they make, and where walls push back. */
+  forces: boolean
+  /** A long exposure of where free ants walk. */
+  traffic: boolean
 }
 
 function rgb(hex: string): [number, number, number] {
@@ -22,6 +31,7 @@ function rgb(hex: string): [number, number, number] {
 
 const INK = rgb(colors.ant)
 const LOAD = rgb(colors.load)
+const BENCH = rgb(colors.background)
 
 /** The zoom that fits the whole arena in a view, with a small margin. */
 export function fitZoom(puzzle: Puzzle, width: number, height: number): number {
@@ -36,6 +46,11 @@ export class Renderer {
   private scentCanvas: HTMLCanvasElement | null = null
   private scentImage: ImageData | null = null
   private scentAge = 99
+  private sealedFor: World | null = null
+  private sealed: HTMLCanvasElement | null = null
+  private trafficFor: World | null = null
+  private traffic: HTMLCanvasElement | null = null
+  private trafficAge = 0
 
   draw(
     ctx: CanvasRenderingContext2D,
@@ -54,12 +69,238 @@ export class Renderer {
     ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (width / 2 - cam.x * z), dpr * (height / 2 - cam.y * z))
 
     this.floor(ctx, p)
+    if (view.traffic) this.exposure(ctx, world)
+    else this.trafficFor = null
     if (view.scent) this.scent(ctx, world)
     if (view.trace) this.trace(ctx, world, z)
     this.nest(ctx, p, z)
+    this.sealedOff(ctx, world)
     this.walls(ctx, p, world)
     this.load(ctx, world)
+    if (view.pulls) this.grips(ctx, world)
     this.ants(ctx, world, z, view.roles, playerIndex)
+    if (view.pulls) this.pulls(ctx, world, z)
+    if (view.forces) this.forces(ctx, world, z)
+  }
+
+  /**
+   * Floor no ant can reach from the nest (the inside of a block, the far side of a sealed wall) is
+   * painted as bench: it is not part of the arena. Worked out once per world from the wall field.
+   */
+  private sealedOff(ctx: CanvasRenderingContext2D, world: World): void {
+    if (this.sealedFor !== world) {
+      this.sealedFor = world
+      this.sealed = this.buildSealed(world)
+    }
+    if (!this.sealed) return
+    const f = world.fields
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, 0, world.puzzle.w, world.puzzle.h)
+    ctx.clip()
+    ctx.imageSmoothingEnabled = true
+    ctx.drawImage(this.sealed, -f.sres / 2, -f.sres / 2, f.sw * f.sres, f.sh * f.sres)
+    ctx.restore()
+  }
+
+  private buildSealed(world: World): HTMLCanvasElement | null {
+    const f = world.fields
+    const { sw, sh, sres, sdf } = f
+    const open = (k: number): boolean => (sdf[k] ?? 0) > 1
+    const reached = new Uint8Array(sw * sh)
+    const start =
+      Math.min(sh - 2, Math.max(1, Math.round(world.puzzle.nest.y / sres))) * sw +
+      Math.min(sw - 2, Math.max(1, Math.round(world.puzzle.nest.x / sres)))
+    const queue = new Int32Array(sw * sh)
+    let head = 0
+    let tail = 0
+    queue[tail++] = start
+    reached[start] = 1
+    while (head < tail) {
+      const k = queue[head++] ?? 0
+      const i = k % sw
+      for (const n of [k - 1, k + 1, k - sw, k + sw]) {
+        if (n < 0 || n >= sw * sh || reached[n]) continue
+        if ((n === k - 1 && i === 0) || (n === k + 1 && i === sw - 1)) continue
+        if (!open(n)) continue
+        reached[n] = 1
+        queue[tail++] = n
+      }
+    }
+    // Sealed = open floor the flood never reached, grown a little way into the walls beside it.
+    const sealed = new Uint8Array(sw * sh)
+    let any = false
+    for (let k = 0; k < sw * sh; k++) {
+      if (open(k) && !reached[k]) {
+        sealed[k] = 1
+        any = true
+      }
+    }
+    if (!any) return null
+    for (let pass = 0; pass < 3; pass++) {
+      const grown = sealed.slice()
+      for (let j = 1; j < sh - 1; j++) {
+        for (let i = 1; i < sw - 1; i++) {
+          const k = j * sw + i
+          if (sealed[k] || open(k)) continue
+          if (sealed[k - 1] || sealed[k + 1] || sealed[k - sw] || sealed[k + sw]) grown[k] = 1
+        }
+      }
+      sealed.set(grown)
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = sw
+    canvas.height = sh
+    const c = canvas.getContext('2d')
+    if (!c) return null
+    const img = c.createImageData(sw, sh)
+    for (let k = 0; k < sw * sh; k++) {
+      if (!sealed[k]) continue
+      img.data[k * 4] = BENCH[0]
+      img.data[k * 4 + 1] = BENCH[1]
+      img.data[k * 4 + 2] = BENCH[2]
+      img.data[k * 4 + 3] = 255
+    }
+    c.putImageData(img, 0, 0)
+    return canvas
+  }
+
+  /** Long exposure: every frame each free ant leaves a speck, and the whole plate fades slowly. */
+  private exposure(ctx: CanvasRenderingContext2D, world: World): void {
+    const p = world.puzzle
+    const scale = 0.5
+    if (this.trafficFor !== world || !this.traffic) {
+      this.trafficFor = world
+      this.traffic = document.createElement('canvas')
+      this.traffic.width = Math.ceil(p.w * scale)
+      this.traffic.height = Math.ceil(p.h * scale)
+      this.trafficAge = 0
+    }
+    const t = this.traffic.getContext('2d')
+    if (!t) return
+    if (++this.trafficAge % 40 === 0) {
+      t.globalCompositeOperation = 'destination-out'
+      t.fillStyle = 'rgba(0,0,0,0.06)'
+      t.fillRect(0, 0, this.traffic.width, this.traffic.height)
+      t.globalCompositeOperation = 'source-over'
+    }
+    t.fillStyle = `rgba(${INK[0]},${INK[1]},${INK[2]},0.09)`
+    for (const a of world.ants) {
+      if (a.state === NEST || a.state === CARRY) continue
+      t.fillRect(a.x * scale - 0.5, a.y * scale - 0.5, 1.5, 1.5)
+    }
+    ctx.imageSmoothingEnabled = true
+    ctx.drawImage(this.traffic, 0, 0, p.w, p.h)
+  }
+
+  /** Grip points: free ones as specks, ones a wall is in the way of in red. */
+  private grips(ctx: CanvasRenderingContext2D, world: World): void {
+    ctx.fillStyle = 'rgba(20,24,20,0.45)'
+    ctx.beginPath()
+    for (const st of world.sites) {
+      if (st.occ >= 0 || st.blocked) continue
+      ctx.moveTo(st.x + st.nx * 2 + 0.9, st.y + st.ny * 2)
+      ctx.arc(st.x + st.nx * 2, st.y + st.ny * 2, 0.9, 0, Math.PI * 2)
+    }
+    ctx.fill()
+    ctx.fillStyle = colors.load
+    ctx.beginPath()
+    for (const st of world.sites) {
+      if (!st.blocked) continue
+      ctx.moveTo(st.x + st.nx * 2 + 1.3, st.y + st.ny * 2)
+      ctx.arc(st.x + st.nx * 2, st.y + st.ny * 2, 1.3, 0, Math.PI * 2)
+    }
+    ctx.fill()
+  }
+
+  /** One line per pulling ant, the way she is pulling. Yellow lines are ants who know the way. */
+  private pulls(ctx: CanvasRenderingContext2D, world: World, z: number): void {
+    const reach = 22
+    ctx.lineCap = 'round'
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0 ? 'rgba(20,24,20,0.8)' : colors.marker
+      ctx.lineWidth = Math.max(pass === 0 ? 1 : 1.8, (pass === 0 ? 1 : 1.8) / z)
+      ctx.beginPath()
+      for (const a of world.ants) {
+        if (a.state !== CARRY || a.role !== PULLER) continue
+        if ((a.informed > 0) !== (pass === 1)) continue
+        const st = world.sites[a.site]
+        if (!st) continue
+        const c = Math.cos(a.dir)
+        const s = Math.sin(a.dir)
+        const x0 = st.x + c * 13
+        const y0 = st.y + s * 13
+        const x1 = st.x + c * (13 + reach)
+        const y1 = st.y + s * (13 + reach)
+        ctx.moveTo(x0, y0)
+        ctx.lineTo(x1, y1)
+        ctx.moveTo(x1 - c * 4 + s * 2.4, y1 - s * 4 - c * 2.4)
+        ctx.lineTo(x1, y1)
+        ctx.lineTo(x1 - c * 4 - s * 2.4, y1 - s * 4 + c * 2.4)
+      }
+      ctx.stroke()
+    }
+  }
+
+  /** The sum of all pulls as one arrow, the twist as an arc, and a tick wherever a wall pushes back. */
+  private forces(ctx: CanvasRenderingContext2D, world: World, z: number): void {
+    const { net } = world
+    const lw = Math.max(2.6, 2.6 / z)
+    const halo = 'rgba(250,250,248,0.85)'
+    const arrow = (x0: number, y0: number, x1: number, y1: number): void => {
+      const len = Math.hypot(x1 - x0, y1 - y0)
+      if (len < 2) return
+      const c = (x1 - x0) / len
+      const s = (y1 - y0) / len
+      const head = Math.min(9, len * 0.5)
+      ctx.beginPath()
+      ctx.moveTo(x0, y0)
+      ctx.lineTo(x1, y1)
+      ctx.moveTo(x1 - c * head + s * head * 0.6, y1 - s * head - c * head * 0.6)
+      ctx.lineTo(x1, y1)
+      ctx.lineTo(x1 - c * head - s * head * 0.6, y1 - s * head + c * head * 0.6)
+    }
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    // Net pull: 2.5 units of arrow per ant's worth of force.
+    const fx = world.x + net.x * 2.5
+    const fy = world.y + net.y * 2.5
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0 ? halo : colors.foreground
+      ctx.lineWidth = pass === 0 ? lw * 2.2 : lw
+      arrow(world.x, world.y, fx, fy)
+      ctx.stroke()
+      // Twist: an arc whose sweep grows with the torque.
+      const sweep = Math.max(-2.6, Math.min(2.6, net.t / 900))
+      if (Math.abs(sweep) > 0.08) {
+        const r = 30
+        ctx.beginPath()
+        ctx.arc(world.x, world.y, r, -Math.PI / 2, -Math.PI / 2 + sweep, sweep < 0)
+        const end = -Math.PI / 2 + sweep
+        const ex = world.x + Math.cos(end) * r
+        const ey = world.y + Math.sin(end) * r
+        const dir = end + (sweep > 0 ? Math.PI / 2 : -Math.PI / 2)
+        ctx.moveTo(ex - Math.cos(dir - 0.5) * 7, ey - Math.sin(dir - 0.5) * 7)
+        ctx.lineTo(ex, ey)
+        ctx.lineTo(ex - Math.cos(dir + 0.5) * 7, ey - Math.sin(dir + 0.5) * 7)
+        ctx.stroke()
+      }
+    }
+    // Wall contacts: a dot on the wall and a tick along the push.
+    ctx.strokeStyle = colors.foreground
+    ctx.fillStyle = colors.marker
+    ctx.lineWidth = Math.max(1.6, 1.6 / z)
+    for (const c of world.contacts) {
+      if (c.sep > 0.5) continue
+      ctx.beginPath()
+      ctx.moveTo(c.x, c.y)
+      ctx.lineTo(c.x + c.nx * 14, c.y + c.ny * 14)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(c.x, c.y, 3, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    }
   }
 
   private floor(ctx: CanvasRenderingContext2D, p: Puzzle): void {
@@ -127,8 +368,22 @@ export class Renderer {
   private trace(ctx: CanvasRenderingContext2D, world: World, z: number): void {
     const t = world.trace
     if (t.length < 6) return
+    // A print of the load every five seconds: where it lingers, the prints pile up.
+    const rects = world.shape.rects
+    const every = 30
+    const first = Math.max(0, Math.floor((t.length / 3 - 260 * 10) / 10) * 10 * 3)
+    ctx.fillStyle = `rgba(${LOAD[0]},${LOAD[1]},${LOAD[2]},0.05)`
+    for (let i = first; i < t.length; i += every) {
+      ctx.save()
+      ctx.translate(t[i] ?? 0, t[i + 1] ?? 0)
+      ctx.rotate(t[i + 2] ?? 0)
+      ctx.beginPath()
+      for (const r of rects) ctx.rect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0)
+      ctx.fill()
+      ctx.restore()
+    }
     ctx.strokeStyle = colors.load
-    ctx.globalAlpha = 0.55
+    ctx.globalAlpha = 0.6
     ctx.lineWidth = Math.max(1.2, 1.2 / z)
     ctx.lineJoin = 'round'
     ctx.beginPath()
