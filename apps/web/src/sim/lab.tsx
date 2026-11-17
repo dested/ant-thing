@@ -10,6 +10,8 @@ import { RaceBoard } from '~/race/board'
 import { Keyhole } from '~/space/keyhole'
 import { useSpace } from '~/space/use-space'
 import { Race, raceSize, useCores, type RaceStats } from '~/race/race'
+import { ShareButton } from '~/share/share-button'
+import { SoundButton } from '~/sound/sound-button'
 import { clock } from './clock'
 import type { ViewOptions } from './renderer'
 import { RATES, WARM_SECONDS, type Finish, type Mode, type Session, type Snapshot } from './session'
@@ -271,13 +273,33 @@ function Overlay({ session, snap }: { session: Session; snap: Snapshot }) {
         </Button>
       )}
       {snap.delivered && (
-        <div className="absolute top-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-md border border-input bg-popover py-2 pr-2 pl-4">
+        <div className="absolute top-4 left-1/2 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-x-4 gap-y-2 rounded-md border border-input bg-popover py-2 pr-2 pl-4">
           <p className="font-display text-lg font-bold whitespace-nowrap">
             Delivered in <span className="tabular">{clock(snap.deliveredAt)}</span>
           </p>
-          <Button size="sm" onClick={() => session.restart()}>
-            New colony
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareButton place="lab" shot={() => session.shot()} />
+            <Button size="sm" onClick={() => session.restart()}>
+              New colony
+            </Button>
+          </div>
+        </div>
+      )}
+      {snap.tape > 1 && !snap.warming && (snap.mode !== 'ant' || snap.delivered) && (
+        <div className="absolute right-3 bottom-3 left-14 flex h-8 items-center gap-3 rounded-md border border-input bg-popover pr-1 pl-3">
+          <Slider
+            aria-label="Rewind"
+            value={snap.at < 0 ? snap.tape - 1 : snap.at}
+            min={0}
+            max={snap.tape - 1}
+            step={1}
+            onValueChange={(frame) => session.scrub(frame)}
+          />
+          {snap.at >= 0 && (
+            <Button size="sm" onClick={() => session.live()} className="h-6 px-2.5">
+              Now
+            </Button>
+          )}
         </div>
       )}
     </>
@@ -379,6 +401,7 @@ function Panel({
           onChange={(rate) => session?.setRate(rate)}
           className="flex-1"
         />
+        <SoundButton />
       </div>
 
       <Segmented

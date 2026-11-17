@@ -1,5 +1,8 @@
 import { CARRY, DEFAULT_PARAMS, DT, World, type Params, type Puzzle } from '@app/sim'
+import type { Shot } from '~/share/clip'
+import { sound } from '~/sound/sound'
 import { fitZoom, Renderer, type Camera, type ViewOptions } from './renderer'
+import { Tape } from './tape'
 
 export type Mode = 'watch' | 'ant' | 'hands'
 
@@ -49,6 +52,10 @@ export interface Snapshot {
   standard: boolean
   /** True when a rule knob or the ant count is off its default. */
   changed: boolean
+  /** Frames on the tape: how far back the run can be scrubbed. */
+  tape: number
+  /** The frame being looked at while the run is rewound; -1 when it is live. */
+  at: number
 }
 
 export interface Finish {
@@ -94,6 +101,8 @@ export const IDLE: Snapshot = {
   scentRule: DEFAULT_PARAMS.scent,
   standard: true,
   changed: false,
+  tape: 0,
+  at: -1,
 }
 
 function randomSeed(): number {
@@ -142,6 +151,14 @@ export class Session {
   private acc = 0
   private published = 0
   private speed = 0
+  private heardCarriers = 0
+  private heardDelivery = false
+  private readonly tape = new Tape()
+  /** The tape frame on show while rewound; -1 when live. */
+  private at = -1
+  /** Stands in for the world while rewound: posed from the tape, never stepped. */
+  private ghost: World | null = null
+  private ghostAt = -1
   private current: Snapshot = IDLE
   private readonly listeners = new Set<() => void>()
   private readonly touches = new Map<number, Touch>()
@@ -181,7 +198,7 @@ export class Session {
       running: this.running,
       rate: this.rate,
       warming: w.warmup > 0,
-      time: w.delivered ? w.deliveredAt : w.time,
+      time: this.at >= 0 ? this.tape.timeAt(this.at) : w.delivered ? w.deliveredAt : w.time,
       delivered: w.delivered,
       deliveredAt: w.deliveredAt,
       carriers: w.stats.carriers,
@@ -200,12 +217,17 @@ export class Session {
       scentRule: this.params.scent,
       standard: this.standard,
       changed: this.rulesChanged(),
+      tape: this.tape.length,
+      at: this.at,
     }
   }
 
   // ---- Controls -----------------------------------------------------------------------------
 
   private build(): World {
+    this.tape.clear()
+    this.at = -1
+    this.ghost = null
     const world = new World(this.puzzle, this.seed, this.params)
     world.startWarmup(WARM_SECONDS)
     if (this.mode === 'hands') world.setHands(true)
@@ -247,7 +269,61 @@ export class Session {
 
   setRunning(on: boolean): void {
     this.running = on
+    if (on) this.at = -1
     this.publish()
+  }
+
+  /** Look back at a frame of the tape. The run waits where it is until `live()`. */
+  scrub(frame: number): void {
+    const last = this.tape.length - 1
+    if (last < 1) return
+    const at = Math.max(0, Math.min(last, Math.round(frame)))
+    // Dragging to the end is the same as coming back.
+    this.at = at >= last ? -1 : at
+    this.publish()
+  }
+
+  /** Back to the run as it is now. */
+  live(): void {
+    this.at = -1
+    this.publish()
+  }
+
+  /** The run so far as footage for a clip, or null before there is any. */
+  shot(): Shot | null {
+    const tape = this.tape.copy()
+    const last = tape.length - 1
+    if (last < 1) return null
+    const puzzle = this.puzzle
+    const trace = this.world.trace.slice()
+    const ghost = new World(puzzle, this.seed, this.params)
+    const renderer = new Renderer()
+    const view: ViewOptions = {
+      ...this.view,
+      scent: false,
+      pulls: false,
+      forces: false,
+      traffic: false,
+      planner: false,
+      trace: true,
+    }
+    return {
+      seconds: tape.timeAt(last),
+      who: this.kind === 'HANDS' ? 'By hand' : `${puzzle.ants} ants`,
+      delivered: this.world.delivered,
+      clock: (at) => tape.timeAt(at * last),
+      draw: (ctx, at, width, height) => {
+        tape.show(at * last, ghost, trace)
+        const turn = height > width
+        const cam = {
+          x: puzzle.w / 2,
+          y: puzzle.h / 2,
+          zoom: fitZoom(puzzle, width, height, turn),
+          turn,
+        }
+        renderer.draw(ctx, ghost, cam, width, height, 1, view, -1)
+      },
+    }
   }
 
   setRate(rate: Rate): void {
@@ -573,7 +649,7 @@ export class Session {
     if (!this.onscreen) return
     const w = this.world
     const warming = w.warmup > 0
-    if (this.running || warming) {
+    if ((this.running && this.at < 0) || warming) {
       // Rate 0 is "max": ask for more than any machine can do and let the frame budget cap it.
       this.acc += elapsed * (warming ? WARM_RATE : this.rate || 4000)
       const start = performance.now()
@@ -583,8 +659,10 @@ export class Session {
         this.acc -= DT
         w.step()
         steps++
+        if (!warming && !w.delivered) this.tape.step(w)
         if (w.delivered && !this.reported) {
           this.reported = true
+          this.tape.keep(w)
           this.onFinish?.({
             seed: this.seed,
             ants: this.puzzle.ants,
@@ -606,9 +684,11 @@ export class Session {
       }
       const v = Math.hypot(w.vx, w.vy)
       this.speed += (v - this.speed) * 0.1
+      if (sound.on) this.listen(steps > 0)
       if (elapsed > 0) this.pace += ((steps * DT) / elapsed - this.pace) * 0.08
     } else {
       this.pace = 0
+      if (sound.on) sound.scrape(0, 0)
     }
     this.follow(elapsed)
     this.render()
@@ -618,8 +698,31 @@ export class Session {
     }
   }
 
+  /** What this frame sounded like: the load dragging, a wall scraping it, ants biting, the nest reached. */
+  private listen(stepped: boolean): void {
+    const w = this.world
+    const moving = stepped && !w.frozen ? Math.min(1, this.speed / 14) : 0
+    sound.scrape(moving, w.contacts.length > 0 ? moving : 0)
+    const carriers = w.stats.carriers
+    if (carriers > this.heardCarriers) sound.tick('bite')
+    this.heardCarriers = carriers
+    if (w.delivered && !this.heardDelivery) sound.chime('delivered')
+    this.heardDelivery = w.delivered
+  }
+
   private render(): void {
     if (!this.ctx) return
+    if (this.at >= 0) {
+      this.ghost ??= new World(this.puzzle, this.seed, this.params)
+      if (this.ghostAt !== this.at) this.tape.show(this.at, this.ghost, this.world.trace)
+      this.ghostAt = this.at
+      // The scent, the pulls and the long exposure belong to now, not to then.
+      const view = { ...this.view, scent: false, pulls: false, forces: false, traffic: false }
+      const { cam, width, height, dpr } = this
+      this.renderer.draw(this.ctx, this.ghost, cam, width, height, dpr, view, -1, this.route)
+      return
+    }
+    this.ghostAt = -1
     this.renderer.draw(
       this.ctx,
       this.world,

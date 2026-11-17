@@ -8,8 +8,11 @@ import { isAssetPath } from './server/asset-path'
 import { env } from './server/env'
 import { formatError, log, requestLogger, startupBanner } from './server/logger'
 import { prisma } from './server/prisma'
+import { startRooms } from './server/rooms-socket'
 import { appRouter } from './server/router'
+import { onShutdown } from './server/shutdown'
 import { createContext } from './server/trpc'
+import { attachUpgrades } from './server/upgrades'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const isProd = process.env.NODE_ENV === 'production'
@@ -22,6 +25,9 @@ async function createServer() {
   // Vite's HMR websocket rides on this same server (see `hmr.server` below),
   // so dev needs one port and two clones of this template can run side by side.
   const httpServer = http.createServer(app)
+  // WebSocket upgrades by path (server/upgrades.ts); Vite HMR keeps its own.
+  attachUpgrades(httpServer, { isProd })
+  onShutdown(startRooms())
   app.disable('x-powered-by')
   // One proxy (Drydock's Caddy) sits in front in production: req.ip is the visitor, not the proxy.
   app.set('trust proxy', 1)
@@ -145,7 +151,7 @@ async function createServer() {
       port: PORT,
       isProd,
       databaseUrl: env.DATABASE_URL,
-      routes: ['/', '/healthz', '/api/trpc'],
+      routes: ['/', '/healthz', '/api/trpc', '/api/room (ws)'],
     })
   })
 }

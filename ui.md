@@ -61,18 +61,25 @@ The sim is the only thing that moves. Chrome changes are instant: no entrance an
 
 ## Components
 
-| Component           | File                                             | Notes                                                                                        |
-| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `Lab`               | `apps/web/src/sim/lab.tsx`                       | the arena + panel; also hosts the race board and panel                                       |
-| `Segmented`, `Chip` | `apps/web/src/components/ui/segmented.tsx`       | one-of-few joined buttons; an on/off view layer                                              |
-| `Slider`, `Switch`  | `apps/web/src/components/ui/{slider,switch}.tsx` | Base UI, hairline track, square ink thumb                                                    |
-| `Button`, `Input`   | `apps/web/src/components/ui/`                    | Base UI; `type="button"` by default                                                          |
-| `PuzzleThumb`       | `apps/web/src/sim/thumb.tsx`                     | SVG still of a puzzle                                                                        |
-| `SweepChart`        | `apps/web/src/science/sweep-chart.tsx`           | column chart: grey context bars, red for the page's setting, blue dots for the visitor's run |
-| `RaceBoard`         | `apps/web/src/race/board.tsx`                    | canvas grid of mini arenas                                                                   |
-| `Keyhole`           | `apps/web/src/space/keyhole.tsx`                 | inset map on the arena                                                                       |
+| Component           | File                                             | Notes                                                                                                                              |
+| ------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Lab`               | `apps/web/src/sim/lab.tsx`                       | the arena + panel; also hosts the race board and panel                                                                             |
+| `Segmented`, `Chip` | `apps/web/src/components/ui/segmented.tsx`       | one-of-few joined buttons; an on/off view layer                                                                                    |
+| `Slider`, `Switch`  | `apps/web/src/components/ui/{slider,switch}.tsx` | Base UI, hairline track, square ink thumb                                                                                          |
+| `Button`, `Input`   | `apps/web/src/components/ui/`                    | Base UI; `type="button"` by default                                                                                                |
+| `PuzzleThumb`       | `apps/web/src/sim/thumb.tsx`                     | SVG still of a puzzle                                                                                                              |
+| `SweepChart`        | `apps/web/src/science/sweep-chart.tsx`           | column chart: grey context bars, red for the page's setting, blue dots for the visitor's run                                       |
+| `RaceBoard`         | `apps/web/src/race/board.tsx`                    | canvas grid of mini arenas                                                                                                         |
+| `Keyhole`           | `apps/web/src/space/keyhole.tsx`                 | inset map on the arena                                                                                                             |
+| `PeopleChart`       | `apps/web/src/people/people-chart.tsx`           | strip plot: a dot per delivery on one clock, grey for colonies, blue for rooms, an ink tick for typical                            |
+| `SoundButton`       | `apps/web/src/sound/sound-button.tsx`            | the one sound switch: outlined icon button, `aria-pressed`                                                                         |
+| `ShareButton`       | `apps/web/src/share/share-button.tsx`            | "Share" → "Making the clip 40%" → download, or "Send the clip" (filled) on a phone                                                 |
+| Rewind bar          | `Overlay` in `apps/web/src/sim/lab.tsx`          | a `Slider` on a popover strip along the arena's bottom edge; "Now" appears while rewound                                           |
+| Room page           | `apps/web/src/app/people.tsx`                    | arena full-bleed; phone: clock top-left, people and agreement top-right, sound and share bottom-left, the hold button bottom-right |
 
 Charts: columns ≤ 24px with a 4px rounded top, hairline grid at 0/50/100%, value on the cap, text in text tokens (never the series colour), a legend row under the plot, a tooltip on hover and focus, an `sr-only` table.
+
+People, on the canvas: seen from above, a person is shoulders and a head in wall white with ink outlines; the visitor's own head is `marker` yellow inside a yellow ring. A holder's arms reach her grip and a thin ink line shows which way she pulls. Clips (`src/share/clip.ts`) are 720×1280: the clock in display type top-left, who carried it and `ant.dested.com` top-right, the arena below turned upright.
 
 ## Icon
 

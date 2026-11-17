@@ -19,6 +19,20 @@ test('the lab runs on the home page', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'What one ant does' })).toBeVisible()
 })
 
+test('a run can be rewound and brought back', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: '64×' }).click()
+  const rewind = page.getByRole('slider', { name: 'Rewind' })
+  await expect(rewind).toBeAttached({ timeout: 30_000 })
+  await rewind.focus()
+  await page.keyboard.press('Home')
+  const now = page.getByRole('button', { name: 'Now' })
+  await expect(now).toBeVisible()
+  await expect(page.locator('aside p.font-display').first()).toHaveText('0:00')
+  await now.click()
+  await expect(now).toBeHidden()
+})
+
 test('a built puzzle is checked, published and playable', async ({ page }) => {
   await page.goto('/build')
   await expect(page.getByText('There is a way through')).toBeVisible({ timeout: 30_000 })

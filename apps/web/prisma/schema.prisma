@@ -66,3 +66,29 @@ model Report {
   @@id([puzzleId, ipHash])
   @@map("report")
 }
+
+enum CarryOutcome {
+  DELIVERED
+  CALLED_OFF
+  ABANDONED
+}
+
+/// One round of people carrying the load together in a room. The server runs the physics, so the
+/// time can be trusted.
+model Carry {
+  id        Int          @id @default(autoincrement())
+  puzzleId  String       @map("puzzle_id")
+  outcome   CarryOutcome
+  /// Sim seconds from the first pull to the nest, or to wherever the round ended.
+  seconds   Float
+  /// People in the room, averaged over the round.
+  people    Float
+  /// The most people in the room at once.
+  peak      Int
+  /// How many of the puzzle's walls the load got through (packages/sim `gateLines`).
+  gates     Int
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@index([puzzleId, outcome, createdAt])
+  @@map("carry")
+}

@@ -5,6 +5,8 @@ A colony of simulated ants carries a T-shaped load through two narrow slits, the
 **Live: https://ant.dested.com**
 
 - Watch a colony, be one of the ants, or drag the load through yourself.
+- Join a room and carry the same load with whoever else is there: no talking, the server runs the physics, and every round is plotted against the colony.
+- Rewind a run, turn the sound on, and share a clip of it made in your browser.
 - Eight debug views: roles, scent, the load's path, every pull, net force and wall contacts, ant traffic, the planner's route, and a map of the load's whole configuration space with the colony's path on it.
 - Race 48 colonies at once, one worker per core, and replay any of them.
 - Build your own puzzle (walls, pegs, mazes, any load shape) and publish it. An exhaustive search checks that a way through exists before it goes up.

@@ -8,7 +8,11 @@ function Slider({ className, ...props }: SliderPrimitive.Root.Props<number>) {
       <SliderPrimitive.Control className="flex h-6 w-full cursor-pointer touch-none items-center select-none">
         <SliderPrimitive.Track className="relative h-px w-full bg-foreground/35">
           <SliderPrimitive.Indicator className="-top-px h-[3px] bg-foreground" />
-          <SliderPrimitive.Thumb className="h-4 w-1.5 rounded-[1px] bg-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50" />
+          {/* The label names the range input too, which is what a screen reader lands on. */}
+          <SliderPrimitive.Thumb
+            aria-label={props['aria-label']}
+            className="h-4 w-1.5 rounded-[1px] bg-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          />
         </SliderPrimitive.Track>
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

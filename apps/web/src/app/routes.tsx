@@ -6,6 +6,7 @@ import { BuildPage } from './build'
 import { RouteErrorBoundary } from './error-boundary'
 import { HomePage } from './home'
 import { Layout } from './layout'
+import { PeoplePage } from './people'
 import { PuzzlePage } from './puzzle'
 import { PuzzlesPage } from './puzzles'
 
@@ -16,7 +17,17 @@ import { PuzzlesPage } from './puzzles'
 // The home puzzle runs from code; its numbers are a nice-to-have, so a failed prefetch is ignored.
 async function homeLoader({ context }: LoaderFunctionArgs): Promise<null> {
   const { queryClient, trpc } = context.get(clientsContext)
-  await queryClient.prefetchQuery(trpc.puzzles.get.queryOptions({ id: 'piano-movers' }))
+  await Promise.all([
+    queryClient.prefetchQuery(trpc.puzzles.get.queryOptions({ id: 'piano-movers' })),
+    queryClient.prefetchQuery(trpc.people.stats.queryOptions()),
+  ])
+  return null
+}
+
+// The room's record is a nice-to-have too: the page is the socket.
+async function peopleLoader({ context }: LoaderFunctionArgs): Promise<null> {
+  const { queryClient, trpc } = context.get(clientsContext)
+  await queryClient.prefetchQuery(trpc.people.stats.queryOptions())
   return null
 }
 
@@ -54,6 +65,7 @@ export const routes: RouteObject[] = [
     ErrorBoundary: RouteErrorBoundary,
     children: [
       { index: true, Component: HomePage, loader: homeLoader },
+      { path: 'people', Component: PeoplePage, loader: peopleLoader },
       { path: 'puzzles', Component: PuzzlesPage, loader: puzzlesLoader },
       { path: 'p/:id', Component: PuzzlePage, loader: puzzleLoader },
       { path: 'build', Component: BuildPage, loader: buildLoader },

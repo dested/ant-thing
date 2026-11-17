@@ -9,6 +9,7 @@ export function Layout() {
         </Link>
         <nav className="flex items-center gap-5 text-sm font-medium">
           {[
+            { to: '/people', label: 'People' },
             { to: '/puzzles', label: 'Puzzles' },
             { to: '/build', label: 'Build' },
           ].map((item) => (

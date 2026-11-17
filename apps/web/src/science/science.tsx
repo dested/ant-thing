@@ -1,4 +1,9 @@
 import { requirePreset } from '@app/sim'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router'
+import { buttonVariants } from '~/components/ui/button'
+import { useTRPC } from '~/lib/trpc'
+import { PeopleChart } from '~/people/people-chart'
 import data from './data.json'
 import { SweepChart, type Point } from './sweep-chart'
 
@@ -45,6 +50,25 @@ function Rule({ name, children }: { name: string; children: React.ReactNode }) {
 const of = (point: Point | undefined): string =>
   point ? `${point.delivered} of ${point.runs}` : ''
 
+/** The way into a room, and how many people are in one right now. */
+function Rooms() {
+  const trpc = useTRPC()
+  const stats = useQuery({ ...trpc.people.stats.queryOptions(), refetchInterval: 30_000 })
+  const online = stats.data?.online ?? 0
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <Link to="/people" className={buttonVariants({ size: 'lg' })}>
+        Join a room
+      </Link>
+      {online > 0 && (
+        <p className="tabular text-sm font-medium">
+          {online === 1 ? '1 person is' : `${online} people are`} carrying right now
+        </p>
+      )}
+    </div>
+  )
+}
+
 /** Below the lab: what the ants are doing, what the numbers say, and what was made up. */
 export function Science() {
   const usual = science.conformity.find((point) => point.value === 1)
@@ -65,6 +89,24 @@ export function Science() {
             The arena above is that puzzle. Every ant in it follows the same few rules, taken from
             the lab’s papers. None of them knows what a wall is, and nothing plans the route.
           </p>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="font-display text-4xl leading-none font-extrabold">
+            The people are whoever is here
+          </h2>
+          <p className="max-w-[65ch] leading-relaxed">
+            The other half of the experiment runs on this site, live. Join a room and you hold the
+            same load as everyone else in it. Nobody can talk. All you can do is walk, take hold,
+            pull and let go, and see which way the others are pulling.
+          </p>
+          <p className="max-w-[65ch] leading-relaxed">
+            The load is weighted for the group, as the lab’s were: every person in the room adds to
+            it, so it only moves well when most of you pull the same way. A person pulls as hard as
+            one ant and walks as fast, and the room keeps the same clock as the colony.
+          </p>
+          <Rooms />
+          <PeopleChart />
         </section>
 
         <section className="flex flex-col gap-4">
@@ -173,6 +215,13 @@ export function Science() {
               Flat and rigid. The load moves only while it is pulled, and stops when the pulls
               cancel. Ants walk through each other. A colony here is a few hundred ants, not tens of
               thousands.
+            </Rule>
+            <Rule name="The people">
+              In a room a person pulls exactly as hard as one ant and can push as well as pull. The
+              load’s drag on the floor is half a pull for each person there. I made those up so
+              people and ants could share a clock. The lab’s people could see the whole maze, and so
+              can you. Rooms run at twice real time; the clock counts the same seconds the colony’s
+              does.
             </Rule>
             <Rule name="The times">
               A run can’t be replayed on the server, so a posted time is only checked against the

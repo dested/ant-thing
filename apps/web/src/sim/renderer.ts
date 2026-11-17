@@ -21,6 +21,22 @@ export interface Camera {
   y: number
   /** Screen pixels per world unit (CSS pixels). */
   zoom: number
+  /** A quarter turn, so the way to the nest runs up a tall screen instead of across it. */
+  turn?: boolean
+}
+
+/** Somebody in a room, as the overhead camera sees her. */
+export interface Figure {
+  x: number
+  y: number
+  /** Facing, radians. */
+  h: number
+  /** The grip point her hands are on, or null when she is walking. */
+  grip: { x: number; y: number } | null
+  /** Her pull, a vector no longer than 1. */
+  px: number
+  py: number
+  you: boolean
 }
 
 export interface ViewOptions {
@@ -52,8 +68,27 @@ const LOAD = rgb(colors.load)
 const BENCH = rgb(colors.background)
 
 /** The zoom that fits the whole arena in a view, with a small margin. */
-export function fitZoom(puzzle: Puzzle, width: number, height: number): number {
-  return Math.min(width / (puzzle.w + 24), height / (puzzle.h + 24))
+export function fitZoom(puzzle: Puzzle, width: number, height: number, turn = false): number {
+  const across = turn ? puzzle.h : puzzle.w
+  const down = turn ? puzzle.w : puzzle.h
+  return Math.min(width / (across + 24), height / (down + 24))
+}
+
+/** Point the canvas at the world: after this, drawing is in world units. */
+function aim(
+  ctx: CanvasRenderingContext2D,
+  cam: Camera,
+  width: number,
+  height: number,
+  dpr: number
+): void {
+  const z = dpr * cam.zoom
+  if (cam.turn) {
+    // World +x is up the screen, world +y is to the right.
+    ctx.setTransform(0, -z, z, 0, dpr * (width / 2) - cam.y * z, dpr * (height / 2) + cam.x * z)
+  } else {
+    ctx.setTransform(z, 0, 0, z, dpr * (width / 2) - cam.x * z, dpr * (height / 2) - cam.y * z)
+  }
 }
 
 /**
@@ -85,14 +120,7 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, width, height)
     const z = cam.zoom
-    ctx.setTransform(
-      dpr * z,
-      0,
-      0,
-      dpr * z,
-      dpr * (width / 2 - cam.x * z),
-      dpr * (height / 2 - cam.y * z)
-    )
+    aim(ctx, cam, width, height, dpr)
 
     this.floor(ctx, p)
     if (view.traffic) this.exposure(ctx, world)
@@ -123,14 +151,7 @@ export class Renderer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, width, height)
     const z = cam.zoom
-    ctx.setTransform(
-      dpr * z,
-      0,
-      0,
-      dpr * z,
-      dpr * (width / 2 - cam.x * z),
-      dpr * (height / 2 - cam.y * z)
-    )
+    aim(ctx, cam, width, height, dpr)
     this.floor(ctx, puzzle)
     this.nest(ctx, puzzle, z)
     this.walls(
@@ -139,6 +160,78 @@ export class Renderer {
       puzzle.walls.map(([x1, y1, x2, y2]) => segmentPoly(x1, y1, x2, y2, WALL_T))
     )
     this.load(ctx, shape, puzzle.load.x, puzzle.load.y, puzzle.load.a)
+  }
+
+  /**
+   * The people in a room, on top of whatever `draw` just painted (it leaves the canvas aimed at the
+   * world). From above a person is shoulders and a head; a holder's arms reach her grip point, and a
+   * line shows which way she pulls.
+   */
+  figures(ctx: CanvasRenderingContext2D, figures: readonly Figure[], z: number): void {
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+
+    // Pulls first, under the bodies.
+    ctx.strokeStyle = 'rgba(20,24,20,0.5)'
+    ctx.lineWidth = Math.max(1.6, 1.4 / z)
+    ctx.beginPath()
+    for (const f of figures) {
+      const m = Math.hypot(f.px, f.py)
+      if (!f.grip || m < 0.05) continue
+      ctx.moveTo(f.x + (f.px / m) * 10, f.y + (f.py / m) * 10)
+      ctx.lineTo(f.x + (f.px / m) * (12 + 20 * m), f.y + (f.py / m) * (12 + 20 * m))
+    }
+    ctx.stroke()
+
+    // Arms.
+    ctx.strokeStyle = colors.ant
+    ctx.lineWidth = 2.6
+    ctx.beginPath()
+    for (const f of figures) {
+      if (!f.grip) continue
+      const c = Math.cos(f.h)
+      const s = Math.sin(f.h)
+      for (let side = -1; side <= 1; side += 2) {
+        ctx.moveTo(f.x - s * side * 7, f.y + c * side * 7)
+        ctx.lineTo(f.grip.x - s * side * 3, f.grip.y + c * side * 3)
+      }
+    }
+    ctx.stroke()
+
+    // Shoulders, then heads.
+    ctx.fillStyle = colors.ant
+    ctx.beginPath()
+    for (const f of figures) {
+      ctx.moveTo(f.x + Math.cos(f.h) * 4.6, f.y + Math.sin(f.h) * 4.6)
+      ctx.ellipse(f.x, f.y, 4.6, 9, f.h, 0, Math.PI * 2)
+    }
+    ctx.fill()
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.fillStyle = pass === 0 ? colors.wall : colors.marker
+      ctx.strokeStyle = colors.ant
+      ctx.lineWidth = 1.1
+      ctx.beginPath()
+      for (const f of figures) {
+        if (f.you !== (pass === 1)) continue
+        const hx = f.x + Math.cos(f.h) * 1
+        const hy = f.y + Math.sin(f.h) * 1
+        ctx.moveTo(hx + 4.3, hy)
+        ctx.arc(hx, hy, 4.3, 0, Math.PI * 2)
+      }
+      ctx.fill()
+      ctx.stroke()
+    }
+
+    // A ring so you can find yourself in a crowd.
+    ctx.strokeStyle = colors.marker
+    ctx.lineWidth = Math.max(1.8, 2.2 / z)
+    ctx.beginPath()
+    for (const f of figures) {
+      if (!f.you) continue
+      ctx.moveTo(f.x + 16, f.y)
+      ctx.arc(f.x, f.y, 16, 0, Math.PI * 2)
+    }
+    ctx.stroke()
   }
 
   /** A route as faint prints of the load, one per pose (x, y, angle triples). */

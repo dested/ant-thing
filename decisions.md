@@ -2,6 +2,36 @@
 
 > Append-only log of choices with rejected alternatives. Never reverse one silently — add a superseding entry.
 
+## 2026-11-16 — Rooms speak a raw binary WebSocket, not tRPC subscriptions
+
+**Why:** a room sends the load's pose and every person 15 times a second to up to 24 people, and takes steering back at up to 20 messages a second each. That is a fixed 14 + 8n byte frame (`packages/sim/src/wire.ts`), not JSON through superjson. The endpoint is `/api/room` on the `ws` package, sharing the HTTP server through `server/upgrades.ts` (the template's `add:ws` plumbing, without its tRPC half). Results still go over tRPC (`people.stats`). Room logic is in `server/rooms.ts` with no socket in it, so it is unit tested with a fake line.
+**Rejected:** tRPC subscriptions over `wsLink` (JSON + superjson per frame, and a second protocol to version), WebRTC (no server authority), polling.
+
+## 2026-11-16 — The server carries the load; people walk on their own machines and the server checks them
+
+**Why:** the load is the shared thing, so one `World` per room on the server is the only copy, stepped at twice real time (`ROOM_RATE`) so a 13-minute problem takes 6 or 7. Walking has to feel instant on a phone, so the page moves the visitor at once and reports where she is; the server grants a speed budget and runs `walkTo`, which can't cross a wall. Rooms are in memory on the one instance: a deploy ends every round, the page reconnects.
+**Rejected:** server-side walking with input lag, lockstep (one slow phone stalls a room), trusting client positions.
+
+## 2026-11-16 — What a person is, in the room
+
+**Why:** people and ants have to share a clock to be plotted together. A person pulls exactly as hard as one ant and walks as fast, may push or pull in any direction, and the load's drag on the floor is half a pull per active person (`PERSON_WEIGHT`): full agreement gives two thirds of carrying speed whatever the group size, which is what "scaled to the group" meant in the lab. No ants in a room, no chat, no names, and the whole arena is visible, as it was for the lab's people (their no-talking groups wore masks and sunglasses; they could still see the maze). These numbers are mine and the page says so under "What is real and what is guessed".
+**Rejected:** filling empty grips with ants (hides what the people did), a limited view (not in the paper), chat or emotes (the experiment's point is the silence), a fixed load weight (a room of 20 would fly, one person could not move it).
+
+## 2026-11-16 — A room's first round is a warm-up; only the experiment's puzzle is plotted
+
+**Why:** piano-movers takes people many minutes and most new rooms would never finish one. A room starts on `doorway` (one wall, a bar), which a lone visitor delivers in under a minute and which teaches turning a load, then plays `piano-movers` from round two on. `carry.puzzle_id` records which; `people.stats` and the chart read `piano-movers` only. Every round also stores `gates`, how many walls the load got through, so a failed round still says something.
+**Rejected:** piano-movers from the first second (nobody would see a delivery), a route hint drawn on the floor (people in the lab had none).
+
+## 2026-11-16 — Rewind is footage, and clips are made from it in the browser
+
+**Why:** a run can't be resumed from the past without snapshotting the whole engine, and nobody asked to. The lab keeps a `Tape` of poses and ant positions and the rewind bar looks back along it while the sim waits. The same footage (and a room round's states) is painted into 720×1280 frames and encoded to H.264 MP4 with WebCodecs through `mediabunny`, loaded only when Share is pressed; a clip squeezes any run into 6 to 18 seconds. Nothing is uploaded: the file goes to the phone's share sheet or the downloads folder.
+**Rejected:** recording the live canvas (only works if you pressed record first), rendering clips on the server (CPU, storage, and a place for abuse), GIFs (huge, and TikTok wants MP4), branching a new run from a rewound moment.
+
+## 2026-11-16 — Sound is synthesised and off until switched on
+
+**Why:** every noise (the load dragging, a wall scraping, a grip, the chimes) is made with WebAudio in `src/sound/sound.ts`, so there are no audio files to license or load. It starts off and the switch is remembered, because a page that makes noise unasked gets closed.
+**Rejected:** sampled audio, sound on by default, music.
+
 ## 2026-11-14 — Speed comes from workers on every core, not WASM
 
 **Why:** Sal asked for faster than 64× ("wasm? super fast processor?"). The step was made 1.5× cheaper in TypeScript (`hyp` instead of `Math.hypot`, sniffing every third tick). Max speed gives the sim 28 ms of each frame. Past that, one colony is one thread, so the real gain is many colonies: the race and the charts run headless colonies in Web Workers, one per core (about 1,800× real time on 16 cores). Picking a raced colony replays its seed in the lab.

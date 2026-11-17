@@ -2,6 +2,12 @@
 
 > Terse, newest-first log: what was asked → what was done. One entry per finished task.
 
+## 2026-11-16 — People on the load (live rooms), sound, rewind, share clips
+
+Sal: "what is the next level version of this", then "do 1 [people on the load]. im going to post it on tiktok tomorrow. do ui too".
+Done: `/people`, live rooms of 8 or 24 where every visitor holds the same load, server-run physics over a binary WebSocket (`/api/room`), a warm-up round then the experiment's puzzle, results in the `carry` table and a people-against-ants chart on the home page; synthesised sound with one switch; a rewind bar on the lab; Share makes a 720×1280 MP4 of a colony run or a room round in the browser. Also changed: the slider primitive now names its range input (screen readers, tests), `server/crowd.ts` stand-ins for local testing, dev-only `window.__session` / `window.__room`.
+Touched: packages/sim/src/{people,wire,world,index}.ts, apps/web/server/{rooms,rooms-socket,people,crowd,upgrades,shutdown,router}.ts, apps/web/server.ts, apps/web/prisma/** (migration `carry`), apps/web/src/{people,sound,share,sim,science,app}/**, apps/web/e2e/**, cliffnotes.md, decisions.md, verify.md, ui.md, plans/2026-11-16-people-on-the-load.md
+
 ## 2026-11-14 — Ant Movers: sim, editor, gallery, race, science, deploy
 
 Sal: build the ants-vs-humans piano-movers sim, emergent only, sim + editor + science, public gallery, host on ant.dested.com, public MIT repo. Then: stuck ants, more debug views, more shapes, faster than 64×, a maze, more ants.

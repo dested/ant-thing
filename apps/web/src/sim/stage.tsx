@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { Puzzle } from '@app/sim'
 import { IDLE, Session, type Finish, type Snapshot } from './session'
 
+declare global {
+  interface Window {
+    /** The lab's session, for poking at from the console in dev. */
+    __session?: Session
+  }
+}
+
 const never = (): (() => void) => () => {}
 const idle = (): Snapshot => IDLE
 
@@ -37,6 +44,7 @@ export function Stage({
     const detach = next.attach(el)
     setSession(next)
     onSession(next)
+    if (import.meta.env.DEV) window.__session = next
     return () => {
       detach()
       setSession(null)

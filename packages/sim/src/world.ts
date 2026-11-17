@@ -11,6 +11,7 @@ import {
   type Poly,
 } from './geom'
 import { DEFAULT_PARAMS, type Params } from './params'
+import { clear, PERSON_R, PERSON_REACH, PERSON_STAND, type Person } from './people'
 import { NEST_R, WALL_T, type Puzzle } from './puzzle'
 import { Rng } from './rng'
 import { buildShape, type Shape } from './shape'
@@ -99,6 +100,8 @@ export interface Stats {
   out: number
 }
 
+/** `occ` at or above this is a person (her index plus this), not an ant. */
+const PERSON_OCC = 1_000_000
 const GRAB = 6
 const NO_SCENT = 2
 /** How close an ant's middle gets to a wall. */
@@ -161,6 +164,11 @@ export class World {
   player: { ant: number; tx: number; ty: number; bite: boolean } | null = null
   /** Dragging the load by hand: a grab point in the body frame and where the pointer is. */
   drag: { bx: number; by: number; tx: number; ty: number } | null = null
+
+  /** People steered from outside (a room of visitors). A slot is null once its person has left. */
+  readonly people: (Person | null)[] = []
+  /** Ground friction in pulls, when something other than the load's size sets it (a room scales it to the group). */
+  weight: number | null = null
 
   constructor(puzzle: Puzzle, seed: number, params: Partial<Params> = {}) {
     this.puzzle = puzzle
@@ -295,11 +303,13 @@ export class World {
         this.trace.length = 0
       }
     }
-    if (this.tick % 6 === 0) this.fields.age(6 * DT, this.params.homeAging, this.params.foodAging)
+    if (this.tick % 6 === 0 && this.ants.length > 0)
+      this.fields.age(6 * DT, this.params.homeAging, this.params.foodAging)
     this.solve()
     this.place()
     this.carry()
     this.walk()
+    if (this.people.length > 0) this.ride()
     if (!this.frozen) {
       if (!this.delivered) {
         this.time += DT
@@ -361,7 +371,10 @@ export class World {
     const P = this.params
     const stats = this.stats
     const k = 1 / P.carrySpeed
-    const gt = (P.friction * this.shape.cellCount * k) / (1 + P.lift * stats.lifters)
+    const gt =
+      this.weight === null
+        ? (P.friction * this.shape.cellCount * k) / (1 + P.lift * stats.lifters)
+        : this.weight * k
     const gr = gt * this.shape.rg2
     let a00 = gt
     let a01 = 0
@@ -426,6 +439,26 @@ export class World {
         ant.role = LIFTER
         lifters++
       }
+    }
+    // People pull or push the way they say, as hard as they say: no cone, no lifting.
+    for (const person of this.people) {
+      if (!person || person.site < 0) continue
+      const st = this.sites[person.site]
+      const m = hyp(person.px, person.py)
+      if (!st || m < 0.02) continue
+      const dx = person.px / m
+      const dy = person.py / m
+      const t = (st.x - this.x) * dy - (st.y - this.y) * dx
+      const ks = k * m
+      a00 += ks * dx * dx
+      a01 += ks * dx * dy
+      a02 += ks * dx * t
+      a11 += ks * dy * dy
+      a12 += ks * dy * t
+      a22 += ks * t * t
+      b0 += m * dx
+      b1 += m * dy
+      b2 += m * t
     }
     stats.carriers = carriers
     stats.pullers = pullers
@@ -636,6 +669,107 @@ export class World {
       ant.trip = 60
       ant.marks = false
       ant.cool = this.rng.range(1.5, 4)
+    }
+  }
+
+  /** Set the load's pose from outside (a browser drawing what a server simulates). */
+  pose(x: number, y: number, a: number): void {
+    this.x = x
+    this.y = y
+    this.a = a
+    this.place()
+  }
+
+  /** Add a person, holding a free grip point if there is one, else standing beside the load. Returns her index. */
+  addPerson(): number {
+    const person: Person = { x: this.x, y: this.y, h: 0, site: -1, px: 0, py: 0, gait: 0 }
+    let index = this.people.indexOf(null)
+    if (index < 0) index = this.people.length
+    this.people[index] = person
+    const free: number[] = []
+    for (let i = 0; i < this.sites.length; i++) if (this.roomAt(i)) free.push(i)
+    const pick = free[Math.floor(this.rng.next() * free.length)]
+    if (pick !== undefined) this.take(index, person, pick)
+    else clear(this.fields, person, PERSON_R)
+    return index
+  }
+
+  removePerson(index: number): void {
+    this.drop(index)
+    this.people[index] = null
+  }
+
+  /** Take hold of the nearest free grip point in reach. False when there is none. */
+  hold(index: number): boolean {
+    const person = this.people[index]
+    if (!person || person.site >= 0) return false
+    let best = PERSON_REACH * PERSON_REACH
+    let pick = -1
+    for (let i = 0; i < this.sites.length; i++) {
+      const st = this.sites[i]
+      if (!st || !this.roomAt(i)) continue
+      const d = (st.x - person.x) ** 2 + (st.y - person.y) ** 2
+      if (d < best) {
+        best = d
+        pick = i
+      }
+    }
+    if (pick < 0) return false
+    this.take(index, person, pick)
+    return true
+  }
+
+  drop(index: number): void {
+    const person = this.people[index]
+    if (!person || person.site < 0) return
+    const st = this.sites[person.site]
+    if (st) st.occ = -1
+    person.site = -1
+    person.px = 0
+    person.py = 0
+    clear(this.fields, person, PERSON_R)
+  }
+
+  /** Whether a grip point is free, with room for a person to stand at it and nobody shoulder to shoulder. */
+  private roomAt(site: number): boolean {
+    const st = this.sites[site]
+    if (!st || st.occ >= 0) return false
+    const x = st.x + st.nx * PERSON_STAND
+    const y = st.y + st.ny * PERSON_STAND
+    if (this.fields.dist(x, y) < PERSON_R) return false
+    for (const other of this.people) {
+      if (!other || other.site < 0) continue
+      if ((other.x - x) ** 2 + (other.y - y) ** 2 < (PERSON_R * 1.6) ** 2) return false
+    }
+    return true
+  }
+
+  private take(index: number, person: Person, site: number): void {
+    const st = this.sites[site]
+    if (!st) return
+    st.occ = PERSON_OCC + index
+    person.site = site
+    person.px = 0
+    person.py = 0
+    person.x = st.x + st.nx * PERSON_STAND
+    person.y = st.y + st.ny * PERSON_STAND
+    person.h = Math.atan2(-st.ny, -st.nx)
+  }
+
+  /** Holders ride their grip points, facing the load; a wall scrapes them off. */
+  private ride(): void {
+    for (let i = 0; i < this.people.length; i++) {
+      const person = this.people[i]
+      if (!person || person.site < 0) continue
+      const st = this.sites[person.site]
+      if (!st) continue
+      const nx = st.x + st.nx * PERSON_STAND
+      const ny = st.y + st.ny * PERSON_STAND
+      person.gait += hyp(nx - person.x, ny - person.y)
+      person.x = nx
+      person.y = ny
+      person.h = Math.atan2(-st.ny, -st.nx)
+      if (this.fields.dist(nx, ny) < PERSON_R * 0.5) this.drop(i)
     }
   }
 
